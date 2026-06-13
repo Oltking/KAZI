@@ -27,10 +27,20 @@ async function paidFetch(): Promise<typeof fetch> {
     // typecheck/build never hinges on thirdweb's subpath types being present.
     const td: string = "thirdweb";
     const { createThirdwebClient } = (await import(td)) as any;
+    const { defineChain } = (await import(`${td}/chains`)) as any;
     const { wrapFetchWithPayment } = (await import(`${td}/x402`)) as any;
-    const { privateKeyToAccount } = (await import(`${td}/wallets`)) as any;
+    const { privateKeyToAccount, createWalletAdapter } = (await import(`${td}/wallets`)) as any;
     const client = createThirdwebClient({ clientId: config.thirdwebClientId });
-    const wallet = privateKeyToAccount({ client, privateKey: config.agentPrivateKey });
+    const account = privateKeyToAccount({ client, privateKey: config.agentPrivateKey });
+    const chain = defineChain(config.chain === "celo" ? 42220 : 11142220);
+    // wrapFetchWithPayment wants a Wallet; adapt the server account into one.
+    const wallet = createWalletAdapter({
+      client,
+      adaptedAccount: account,
+      chain,
+      onDisconnect: () => {},
+      switchChain: () => {},
+    });
     return wrapFetchWithPayment(fetch, client, wallet) as typeof fetch;
   } catch (err) {
     console.error("[x402] client unavailable, using plain fetch:", err);
@@ -54,7 +64,8 @@ export async function fetchRiskSignalViaX402(
       record("info", `unpriced risk signal for ${borrower}: ${signal.riskScore} (${signal.source})`);
     }
     return signal;
-  } catch {
+  } catch (e) {
+    console.error("[x402] paid call error:", e);
     return null;
   }
 }

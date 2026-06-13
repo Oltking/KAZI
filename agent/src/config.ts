@@ -21,6 +21,13 @@ export const config = {
   x402FacilitatorUrl: process.env.X402_FACILITATOR_URL,
   x402PayTo: process.env.X402_PAY_TO as `0x${string}` | undefined,
   x402Price: process.env.X402_PRICE ?? "$0.001",
+  // explicit payment token (required on networks where thirdweb has no default
+  // USD stablecoin, e.g. Celo Sepolia). Must support EIP-2612 permit / ERC-3009.
+  x402Token: process.env.X402_TOKEN as `0x${string}` | undefined,
+  x402TokenDecimals: Number(process.env.X402_TOKEN_DECIMALS ?? 18),
+  x402Amount: process.env.X402_AMOUNT ?? "1000000000000000", // 0.001 @ 18dp
+  x402TokenName: process.env.X402_TOKEN_NAME, // EIP-2612 permit domain name
+  x402TokenVersion: process.env.X402_TOKEN_VERSION ?? "1",
   thirdwebClientId: process.env.THIRDWEB_CLIENT_ID,
   thirdwebSecretKey: process.env.THIRDWEB_SECRET_KEY,
   selfApiKey: process.env.SELF_API_KEY,

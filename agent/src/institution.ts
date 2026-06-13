@@ -46,13 +46,30 @@ export function startInstitutionAgent(): void {
       const client = createThirdwebClient({ secretKey: config.thirdwebSecretKey });
       const fac = facilitator({ client, serverWalletAddress: config.x402PayTo });
 
+      // Explicit token pricing when configured (required where thirdweb has no
+      // default USD stablecoin, e.g. Celo Sepolia); else fall back to USD price.
+      const price = config.x402Token
+        ? {
+            amount: config.x402Amount,
+            asset: {
+              address: config.x402Token,
+              decimals: config.x402TokenDecimals,
+              ...(config.x402TokenName
+                ? { eip712: { name: config.x402TokenName, version: config.x402TokenVersion, primaryType: "Permit" } }
+                : {}),
+            },
+          }
+        : config.x402Price;
+
       const result = await settlePayment({
         resourceUrl: new URL(c.req.url).toString(),
         method: "GET",
         paymentData: c.req.header("x-payment"),
         payTo: config.x402PayTo,
-        network: config.chain === "celo" ? "celo" : "celo-sepolia", // (verify network id)
-        price: config.x402Price,
+        // thirdweb expects a CAIP-2 network id. Celo mainnet = eip155:42220,
+        // Celo Sepolia = eip155:11142220.
+        network: config.chain === "celo" ? "eip155:42220" : "eip155:11142220",
+        price,
         facilitator: fac,
       });
 
