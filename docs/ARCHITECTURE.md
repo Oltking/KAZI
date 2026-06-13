@@ -63,4 +63,4 @@ plain-language guarantee.
 | Real senior venue (Aave/Morpho/Mento) | TODO: verify a Celo deployment address, then swap behind `IYieldStrategy` |
 | ERC-8004 | Agent registration wired (registry address via env — verify); reputation reads simple, off-chain aggregation pushes scores |
 | Self | Agent-relayed attestation model (fits MiniPay no-signing); on-chain `SelfVerificationRoot` upgrade pending hub-address verification |
-| x402 (thirdweb) | Client + institution settlement wired, guarded by keys; free dev fallback so the flow always runs |
+| x402 (thirdweb) | Integrated per thirdweb's API (CAIP-2 network, ERC-2612/3009 token, `wrapFetchWithPayment` + `settlePayment`); the 402 paywall handshake works. Real settlement requires a thirdweb-facilitator-supported stablecoin (USDC) on a supported network (e.g. Celo mainnet). On Celo Sepolia a custom permit token does not complete settlement, so the agent treats the signal as unavailable rather than faking a paid call. |
