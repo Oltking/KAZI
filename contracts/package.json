@@ -1,0 +1,19 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "Foundry workspace for the capital-protected vault and the (flag-gated) credit loop. Solidity `^0.8.24`, OpenZeppelin 5.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@selfxyz/contracts": "^1.2.3"
+  }
+}

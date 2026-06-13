@@ -17,6 +17,8 @@ export type KaziAddresses = {
   senior: `0x${string}`;
   allocator: `0x${string}`;
   creditBook: `0x${string}`;
+  selfVerifier?: `0x${string}`;
+  selfHub?: `0x${string}`;
 };
 
 export const addresses = addressesJson as KaziAddresses;

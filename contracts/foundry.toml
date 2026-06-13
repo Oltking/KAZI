@@ -4,13 +4,16 @@ out = "out"
 libs = ["lib"]
 test = "test"
 script = "script"
-solc = "0.8.24"
+solc = "0.8.28"
 optimizer = true
 optimizer_runs = 200
 evm_version = "cancun"
 remappings = [
     "forge-std/=lib/forge-std/src/",
     "@openzeppelin/=lib/openzeppelin-contracts/",
+    "@selfxyz/contracts/=node_modules/@selfxyz/contracts/",
+    "@zk-kit/imt.sol/=node_modules/@zk-kit/imt.sol/",
+    "poseidon-solidity/=node_modules/poseidon-solidity/",
 ]
 fs_permissions = [
     { access = "read-write", path = "./" },

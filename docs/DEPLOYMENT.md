@@ -18,6 +18,15 @@ Explorer: https://celo-sepolia.blockscout.com  (also https://sepolia.celoscan.io
 | ReputationOracle | `0x34cFc827231a9Db7b053082858B19D3B7dAE35e4` |
 | MockStrategy (senior, demo) | `0x8E109d9108315E424E408A6fe406AA5D1Cf1A06C` |
 | MockUSD (demo cUSD) | `0xc24fBd2956820605075Bd85D0f69539f6247c878` |
+| SelfVerifier (Self ZK → SelfGate) | `0xB0b1E4F348DA20857a4dD152595c6994587de9C8` |
+| Self Identity Verification Hub V2 | `0x16ECBA51e18a4a7e61fdC417f0d47AFEeDfbed74` |
+
+> **Self verification is real and on-chain.** A member scans their passport/ID in
+> the Self app; the Hub V2 validates the ZK proof and calls `SelfVerifier`, which
+> attests them into `SelfGate` (18+, excludes US, OFAC off — matching the web
+> disclosure config). Building the contracts needs the Self Solidity deps:
+> `cd contracts && npm install` (pulls `@selfxyz/contracts`), then `forge build`.
+> Deploy the verifier with `forge script script/DeploySelfVerifier.s.sol`.
 
 > The senior strategy and asset are the demo MockStrategy/MockUSD so the streaming
 > yield works without an external dependency (Build Spec §5.1). Swapping in a

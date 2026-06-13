@@ -8,6 +8,7 @@ import {
   isMiniPay,
   getAccount,
 } from "../lib/chain";
+import SelfVerify from "../components/SelfVerify";
 import {
   ASSET_DECIMALS,
   deposit,
@@ -179,16 +180,11 @@ export default function Home() {
         </span>
       </div>
 
-      {/* Self verification — real on-chain status, never faked */}
+      {/* Self verification — real ZK passport flow; on-chain status, never faked */}
       {account && verified === false && (
         <div className="card">
           <div className="label">One-time verification</div>
-          <p className="muted">
-            Kazi is for verified humans only. Complete a quick, privacy-preserving{" "}
-            <a href="https://self.xyz" target="_blank" rel="noreferrer">Self</a> check
-            (proof of unique humanity + region) to deposit. Your status is read live from
-            the on-chain gate — this card clears automatically once you&apos;re verified.
-          </p>
+          <SelfVerify user={account} onVerified={() => void refresh()} />
         </div>
       )}
       {account && verified === true && (
