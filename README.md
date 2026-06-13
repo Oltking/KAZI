@@ -38,11 +38,13 @@ Kazi Agent (off-chain policy): allocate · harvest · distribute · underwrite �
 ## Repo layout
 
 ```
-contracts/   Foundry. Vault, Allocator, strategies, distributor, buffer, credit, gate, oracle.
+contracts/   Foundry. Vault, Allocator, strategies, distributor, buffer, credit, gate,
+             oracle, and the Self on-chain verifier.
 agent/       TypeScript. Control loop (policy), integrations (erc8004/x402/self), status server.
-web/         Next.js MiniPay Mini App (wagmi/viem). No connect button, no signing, cUSD fees.
+web/         Next.js. Marketing landing at /, the Mini App dashboard at /app (viem wallet
+             layer, Self QR, on-chain reads, /api/tick agent route). No signing, cUSD.
 shared/      ABIs, addresses, types.
-docs/        Build spec, risk disclosures, demo script.
+docs/        Architecture, risk disclosures, demo + deploy guides, submission checklist.
 ```
 
 ## Quickstart (Celo Sepolia testnet)
@@ -77,6 +79,7 @@ Follow `KAZI_BUILD_SPEC.md §11`. Phases 1–2 (capital-protected vault + honest
 - [`docs/DEMO.md`](docs/DEMO.md) — the ~3-minute demo script
 - [`docs/SUBMISSION.md`](docs/SUBMISSION.md) — hackathon checklist
 - [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — live Celo Sepolia addresses + agentId
+- [`docs/DEPLOY-WEB.md`](docs/DEPLOY-WEB.md) — deploy the web app to Vercel
 - [`contracts/README.md`](contracts/README.md) — the invariant suite and what it proves
 
 ## Live on Celo Sepolia
