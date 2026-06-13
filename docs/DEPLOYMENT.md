@@ -3,6 +3,10 @@
 Kazi is deployed and running on **Celo Sepolia** (chain id `11142220`). These are
 real, on-chain addresses; the agent transacts against them.
 
+- **Web app:** https://kazi-agent.vercel.app (landing) · https://kazi-agent.vercel.app/app (dashboard)
+- **ERC-8004 agentId `351`** — card resolves at `https://kazi-agent.vercel.app/registration.json`
+  (set on-chain via `setAgentURI`). Visible on 8004scan.
+
 Explorer: https://celo-sepolia.blockscout.com  (also https://sepolia.celoscan.io)
 
 ## Contracts
