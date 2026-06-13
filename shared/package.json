@@ -1,0 +1,16 @@
+{
+  "name": "@kazi/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./abi": "./abi/index.ts",
+    "./addresses.json": "./addresses.json"
+  },
+  "scripts": {
+    "gen:abi": "bash ./gen-abi.sh"
+  }
+}

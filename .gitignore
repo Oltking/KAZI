@@ -30,6 +30,8 @@ contracts/lib/
 
 # --- Generated / local artifacts ---
 shared/addresses.local.json
+.kazi/
+agent/.kazi/
 coverage/
 .coverage
 *.lcov
