@@ -1,7 +1,17 @@
 "use client";
 
 import { type Address, formatUnits, parseUnits } from "viem";
-import { addresses, vaultAbi, allocatorAbi, distributorAbi, erc20Abi, selfGateAbi } from "@kazi/shared";
+import {
+  addresses,
+  vaultAbi,
+  allocatorAbi,
+  distributorAbi,
+  bufferAbi,
+  creditBookAbi,
+  reputationAbi,
+  erc20Abi,
+  selfGateAbi,
+} from "@kazi/shared";
 import { publicClient, getWalletClient } from "./chain";
 
 export const ASSET_DECIMALS = 18; // cUSD / MockUSD
@@ -196,6 +206,89 @@ export async function withdrawAll(user: Address, shares: bigint): Promise<`0x${s
     abi: vaultAbi,
     functionName: "redeem",
     args: [shares, user, user],
+    type: "legacy",
+  });
+}
+
+// ---- Credit (flag-gated borrow loop) ---------------------------------------
+
+export type CreditState = {
+  score: number;
+  minScore: number;
+  capacity: bigint; // buffer available for credit (yield-funded)
+  status: number; // 0 None, 1 Active, 2 Repaid, 3 Defaulted
+  principal: bigint;
+  interest: bigint;
+  dueDate: number; // unix seconds
+  owed: bigint; // principal + interest if active, else 0
+};
+
+export async function fetchCredit(user: Address): Promise<CreditState | null> {
+  if (!isConfigured) return null;
+  try {
+    const [score, minScore, capacity, loan, status, owed] = await Promise.all([
+      publicClient.readContract({ address: addresses.reputation, abi: reputationAbi, functionName: "score", args: [user] }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.creditBook, abi: creditBookAbi, functionName: "minScore" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.buffer, abi: bufferAbi, functionName: "availableForCredit" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.creditBook, abi: creditBookAbi, functionName: "loans", args: [user] }) as Promise<readonly [bigint, bigint, bigint, number]>,
+      publicClient.readContract({ address: addresses.creditBook, abi: creditBookAbi, functionName: "loanStatus", args: [user] }) as Promise<number>,
+      publicClient.readContract({ address: addresses.creditBook, abi: creditBookAbi, functionName: "amountOwed", args: [user] }) as Promise<bigint>,
+    ]);
+    return {
+      score: Number(score),
+      minScore: Number(minScore),
+      capacity,
+      status: Number(status),
+      principal: loan[0],
+      interest: loan[1],
+      dueDate: Number(loan[2]),
+      owed,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Request a loan from the yield buffer (drawn only from realized yield, never
+ *  principal). Reverts on-chain unless verified + score >= minScore + capacity. */
+export async function requestLoan(user: Address, human: string): Promise<`0x${string}`> {
+  const amount = parseUnits(human, ASSET_DECIMALS);
+  const wallet = getWalletClient();
+  return wallet.writeContract({
+    account: user,
+    address: addresses.creditBook,
+    abi: creditBookAbi,
+    functionName: "issue",
+    args: [user, amount],
+    type: "legacy",
+  });
+}
+
+/** Repay the active loan (principal + interest). Interest streams to savers. */
+export async function repayLoan(user: Address, owed: bigint): Promise<`0x${string}`> {
+  const wallet = getWalletClient();
+  const allowance = (await publicClient.readContract({
+    address: addresses.asset,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [user, addresses.creditBook],
+  })) as bigint;
+  if (allowance < owed) {
+    const approveTx = await wallet.writeContract({
+      account: user,
+      address: addresses.asset,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [addresses.creditBook, owed],
+      type: "legacy",
+    });
+    await publicClient.waitForTransactionReceipt({ hash: approveTx });
+  }
+  return wallet.writeContract({
+    account: user,
+    address: addresses.creditBook,
+    abi: creditBookAbi,
+    functionName: "repay",
     type: "legacy",
   });
 }

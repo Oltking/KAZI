@@ -9,6 +9,7 @@ import WalletButton from "../../components/WalletButton";
 import DepositSheet from "../../components/DepositSheet";
 import WithdrawSheet from "../../components/WithdrawSheet";
 import ActivityFeed from "../../components/ActivityFeed";
+import BorrowCard from "../../components/BorrowCard";
 import { ShieldIcon, CheckIcon, LockIcon, SparkIcon, ArrowDownIcon, ArrowUpIcon, FlowIcon } from "../../components/Icons";
 import {
   ASSET_DECIMALS,
@@ -261,6 +262,9 @@ export default function Home() {
                 <span className="statVal">{totalInKazi !== null ? totalInKazi.toFixed(2) : "…"} cUSD</span>
               </div>
             </section>
+
+            {/* Borrow (flag-gated credit loop) */}
+            {connected && account && <BorrowCard account={account} verified={verified} onSettled={refresh} />}
 
             {/* Activity */}
             <section className="card">
