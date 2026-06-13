@@ -14,6 +14,7 @@
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",
     "node-cron": "^3.0.3",
+    "thirdweb": "^5.80.0",
     "viem": "^2.21.55"
   },
   "devDependencies": {

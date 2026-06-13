@@ -6,6 +6,7 @@ import { read, account } from "./chain.ts";
 import { recent } from "./activity.ts";
 import { config } from "./config.ts";
 import { loadState } from "./state.ts";
+import { registrationFile } from "./integrations/erc8004.ts";
 
 /**
  * Status + activity server the web app reads for the live feed and the demo.
@@ -53,6 +54,9 @@ export function startServer(): void {
   });
 
   app.get("/activity", (c) => c.json({ events: recent(50) }));
+
+  // ERC-8004 registration file (the agentURI target → surfaces on 8004scan).
+  app.get("/registration.json", (c) => c.json(registrationFile()));
 
   serve({ fetch: app.fetch, port: config.agentPort });
   console.log(`[server] status/activity on :${config.agentPort}`);

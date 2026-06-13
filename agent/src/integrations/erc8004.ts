@@ -1,8 +1,10 @@
+import { decodeEventLog, parseAbi } from "viem";
+import { config } from "../config.ts";
+import { publicClient, walletClient, account } from "../chain.ts";
 import { record } from "../activity.ts";
 import { loadState, saveState } from "../state.ts";
 
-/** Minimal, client-agnostic boot context (avoids viem's chain-specific client
- *  generics leaking into this stub's signature). */
+/** Minimal, client-agnostic boot context. */
 type Erc8004Context = {
   account?: { address: `0x${string}` };
   publicClient: unknown;
@@ -10,17 +12,23 @@ type Erc8004Context = {
 };
 
 /**
- * ERC-8004 (trustless agents) integration.
+ * ERC-8004 Identity Registry (subset). The registry is an ERC-721 where each
+ * agent is a token whose metadata URI ("agentURI") points at a registration
+ * file on HTTPS/IPFS. Registering surfaces the agent on 8004scan (Track 3).
  *
- * The agent must have its own on-chain identity in the ERC-8004 Identity
- * Registry — an `agentId` (ERC-721) pointing at a registration file on
- * IPFS/HTTPS — so it surfaces on 8004scan (hackathon Track 3). Member credit
- * scores read/write through the Reputation Registry (see ReputationOracle).
- *
- * TODO: verify the LIVE Celo deployment addresses of the ERC-8004 Identity,
- * Reputation, and Validation registries before wiring (Build Spec §7.2 /
- * Ground rule 2 — do NOT hardcode unverified addresses). Until those are
- * confirmed this is a no-op that records intent so the boot sequence is intact.
+ * Signatures sourced from erc-8004/erc-8004-contracts. TODO: verify the live
+ * Celo registry address (set ERC8004_IDENTITY_REGISTRY) before relying on this.
+ */
+const identityRegistryAbi = parseAbi([
+  "function register(string agentURI) returns (uint256 agentId)",
+  "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
+]);
+
+/**
+ * Ensure the agent has an on-chain ERC-8004 identity. Idempotent: once an
+ * agentId is persisted we never re-register. No-op (records intent) until the
+ * registry address + agent key are configured, so the boot sequence stays
+ * intact in dev.
  */
 export async function ensureErc8004Identity(_ctx: Erc8004Context): Promise<void> {
   const state = await loadState();
@@ -28,13 +36,67 @@ export async function ensureErc8004Identity(_ctx: Erc8004Context): Promise<void>
     record("identity", `ERC-8004 agentId ${state.erc8004AgentId} already registered`);
     return;
   }
-  // TODO: verify registry address, then:
-  //   1. publish the agent registration file (IPFS/HTTPS),
-  //   2. call IdentityRegistry.register(registrationURI) -> agentId,
-  //   3. persist agentId so we appear on 8004scan.
-  record(
-    "identity",
-    "ERC-8004 registration pending: verify Identity Registry address on Celo, then register",
-  );
-  void saveState(state);
+  if (!config.erc8004IdentityRegistry || !walletClient || !account) {
+    record(
+      "identity",
+      "ERC-8004 registration pending: set ERC8004_IDENTITY_REGISTRY + AGENT_PRIVATE_KEY (verify address first)",
+    );
+    return;
+  }
+
+  const agentURI = `${config.agentPublicUrl}/registration.json`;
+  try {
+    const { request, result } = await publicClient.simulateContract({
+      account,
+      address: config.erc8004IdentityRegistry,
+      abi: identityRegistryAbi,
+      functionName: "register",
+      args: [agentURI],
+    });
+    const hash = await walletClient.writeContract({ ...(request as object), type: "legacy" } as never);
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+    // prefer the simulated return value; fall back to the Transfer event tokenId.
+    let agentId = result?.toString() ?? null;
+    if (!agentId) {
+      for (const log of receipt.logs) {
+        try {
+          const ev = decodeEventLog({ abi: identityRegistryAbi, ...log });
+          if (ev.eventName === "Transfer") {
+            agentId = (ev.args as { tokenId: bigint }).tokenId.toString();
+            break;
+          }
+        } catch {
+          /* not our event */
+        }
+      }
+    }
+
+    state.erc8004AgentId = agentId;
+    await saveState(state);
+    record("identity", `registered ERC-8004 agentId ${agentId} (${agentURI})`, hash);
+  } catch (err) {
+    record("identity", `ERC-8004 registration failed (will retry on next boot): ${String(err)}`);
+  }
+}
+
+/**
+ * The ERC-8004 registration file (the agentURI target). Loosely follows the
+ * A2A / ERC-8004 agent-card shape; refine field names once the registry's
+ * expected schema is verified.
+ */
+export function registrationFile() {
+  return {
+    name: "Kazi",
+    description:
+      "Capital-protected, streaming-yield savings agent on Celo. Autonomous fund manager: allocates principal to senior venues, harvests and streams yield to savers, and underwrites yield-funded credit to verified, reputation-scored members.",
+    address: account?.address ?? null,
+    chain: config.chain,
+    capabilities: ["savings-vault", "yield-streaming", "credit-underwriting", "x402"],
+    endpoints: {
+      status: `${config.agentPublicUrl}/status`,
+      activity: `${config.agentPublicUrl}/activity`,
+    },
+    standards: ["ERC-4626", "ERC-8004", "x402"],
+  };
 }

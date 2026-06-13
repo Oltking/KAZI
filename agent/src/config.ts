@@ -19,8 +19,16 @@ export const config = {
 
   // integrations (verify before relying on these — Build Spec, Ground rule 2)
   x402FacilitatorUrl: process.env.X402_FACILITATOR_URL,
+  x402PayTo: process.env.X402_PAY_TO as `0x${string}` | undefined,
+  x402Price: process.env.X402_PRICE ?? "$0.001",
   thirdwebClientId: process.env.THIRDWEB_CLIENT_ID,
+  thirdwebSecretKey: process.env.THIRDWEB_SECRET_KEY,
   selfApiKey: process.env.SELF_API_KEY,
+
+  // ERC-8004
+  erc8004IdentityRegistry: process.env.ERC8004_IDENTITY_REGISTRY as `0x${string}` | undefined,
+  erc8004ReputationRegistry: process.env.ERC8004_REPUTATION_REGISTRY as `0x${string}` | undefined,
+  agentPublicUrl: process.env.AGENT_PUBLIC_URL ?? `http://localhost:${process.env.AGENT_PORT ?? 8787}`,
 } as const;
 
 /** Dust threshold below which a harvest is not economically worth a tx. */

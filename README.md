@@ -62,6 +62,21 @@ Get test cUSD from the Celo faucet for the deployer, the agent wallet, and a dem
 
 Follow `KAZI_BUILD_SPEC.md §11`. Phases 1–2 (capital-protected vault + honest streaming + agent harvest loop) must be a complete, transacting, winning submission on their own. The credit loop, x402, and reputation (Phases 4–5) are flag-gated upside, demoed without ever touching principal.
 
+## Docs
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layers, money-flow rules, integration status
+- [`docs/RISK.md`](docs/RISK.md) — the principal guarantee + plain-language risk disclosures
+- [`docs/DEMO.md`](docs/DEMO.md) — the ~3-minute demo script
+- [`docs/SUBMISSION.md`](docs/SUBMISSION.md) — hackathon checklist
+- [`contracts/README.md`](contracts/README.md) — the invariant suite and what it proves
+
+## Status
+
+- **Contracts** — complete; `forge test` green (5 capital-protection invariants, 9 unit tests, 1 end-to-end credit-loop scenario).
+- **Agent** — control loop, `/status`·`/vault`·`/activity` server, ERC-8004 registration, x402 institution agent. Works against `MockStrategy` today.
+- **Web** — MiniPay Mini App with the live earnings ticker; deposit/withdraw as plain transactions.
+- **External integrations** (Self, ERC-8004 registry addresses, thirdweb x402) are wired but every live address/API is marked `// TODO: verify` and must be confirmed against current docs before mainnet — see `docs/ARCHITECTURE.md`.
+
 ## Non-goals
 
 No token / emissions-funded yield. No leverage or exotic strategies for principal. No off-chain custody. No fake UI numbers (the ticker reflects realized on-chain yield only). No user-side signing (MiniPay constraint). No hardcoded unverified addresses.
