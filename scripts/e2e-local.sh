@@ -25,7 +25,14 @@ fail() { echo -e "  \033[31m✗ $1\033[0m"; cleanup; exit 1; }
 step() { echo -e "\n\033[36m▶ $1\033[0m"; }
 
 ANVIL_PID=""
-cleanup() { [ -n "$ANVIL_PID" ] && kill "$ANVIL_PID" 2>/dev/null || true; }
+ADDR_FILE="$ROOT/shared/addresses.json"
+ADDR_BACKUP="$(mktemp)"
+cp "$ADDR_FILE" "$ADDR_BACKUP" 2>/dev/null || true
+cleanup() {
+  [ -n "$ANVIL_PID" ] && kill "$ANVIL_PID" 2>/dev/null || true
+  # restore the committed addresses template — running the e2e must not dirty the repo
+  [ -f "$ADDR_BACKUP" ] && cp "$ADDR_BACKUP" "$ADDR_FILE" 2>/dev/null || true
+}
 trap cleanup EXIT
 
 # --- helpers ----------------------------------------------------------------

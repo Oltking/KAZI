@@ -1,7 +1,7 @@
 "use client";
 
 import { type Address, formatUnits, parseUnits } from "viem";
-import { addresses, vaultAbi, erc20Abi } from "@kazi/shared";
+import { addresses, vaultAbi, erc20Abi, selfGateAbi } from "@kazi/shared";
 import { publicClient, getWalletClient, AGENT_URL } from "./chain";
 
 export const ASSET_DECIMALS = 18; // cUSD / MockUSD
@@ -83,6 +83,22 @@ export async function fetchPosition(user: Address): Promise<Position> {
           args: [shares],
         })) as bigint);
   return { shares, assets };
+}
+
+/** Real on-chain Self verification status from the gate. Never faked — the
+ *  deposit/withdraw flow is gated on exactly this value. */
+export async function isSelfVerified(user: Address): Promise<boolean> {
+  if (!isConfigured) return false;
+  try {
+    return (await publicClient.readContract({
+      address: addresses.selfGate,
+      abi: selfGateAbi,
+      functionName: "isVerified",
+      args: [user],
+    })) as boolean;
+  } catch {
+    return false;
+  }
 }
 
 export async function walletBalance(user: Address): Promise<bigint> {

@@ -14,6 +14,7 @@ import {
   fetchActivity,
   fetchPosition,
   fetchVaultView,
+  isSelfVerified,
   walletBalance,
   withdrawAll,
   isConfigured,
@@ -30,6 +31,7 @@ export default function Home() {
   const [position, setPosition] = useState<Position>({ shares: 0n, assets: 0n });
   const [wallet, setWallet] = useState<bigint>(0n);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const [verified, setVerified] = useState<boolean | null>(null); // real on-chain Self status
   const [display, setDisplay] = useState<number>(0); // live projected redeemable value
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,9 +59,14 @@ export default function Home() {
     baseM.current = m || 1;
 
     if (account) {
-      const [pos, wbal] = await Promise.all([fetchPosition(account), walletBalance(account)]);
+      const [pos, wbal, isVer] = await Promise.all([
+        fetchPosition(account),
+        walletBalance(account),
+        isSelfVerified(account),
+      ]);
       setPosition(pos);
       setWallet(wbal);
+      setVerified(isVer);
       baseAssets.current = Number(formatUnits(pos.assets, ASSET_DECIMALS));
       setDisplay(baseAssets.current);
     }
@@ -172,6 +179,24 @@ export default function Home() {
         </span>
       </div>
 
+      {/* Self verification — real on-chain status, never faked */}
+      {account && verified === false && (
+        <div className="card">
+          <div className="label">One-time verification</div>
+          <p className="muted">
+            Kazi is for verified humans only. Complete a quick, privacy-preserving{" "}
+            <a href="https://self.xyz" target="_blank" rel="noreferrer">Self</a> check
+            (proof of unique humanity + region) to deposit. Your status is read live from
+            the on-chain gate — this card clears automatically once you&apos;re verified.
+          </p>
+        </div>
+      )}
+      {account && verified === true && (
+        <div className="ticker-row" style={{ margin: "0 0 14px 2px" }}>
+          ✅ Self-verified
+        </div>
+      )}
+
       {/* Position details */}
       <div className="card">
         <div className="row">
@@ -191,7 +216,11 @@ export default function Home() {
 
         {mode === null && (
           <div className="btns">
-            <button className="primary" onClick={() => setMode("deposit")} disabled={!account}>
+            <button
+              className="primary"
+              onClick={() => setMode("deposit")}
+              disabled={!account || verified === false}
+            >
               Deposit
             </button>
             <button onClick={() => setMode("withdraw")} disabled={!account || position.shares === 0n}>

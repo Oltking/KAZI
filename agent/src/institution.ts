@@ -31,9 +31,12 @@ export function startInstitutionAgent(): void {
     const borrower = c.req.query("borrower") ?? "0x";
     // deterministic pseudo-signal derived from the address (demo only).
     const riskScore = parseInt(borrower.slice(-2) || "0", 16) % 100;
-    const payload = { borrower, riskScore, source: "institution-demo" };
 
-    if (!x402Enabled) return c.json(payload);
+    if (!x402Enabled) {
+      // honest: this is an UNPRICED dev response, not a settled x402 call.
+      return c.json({ borrower, riskScore, source: "institution (unpriced dev)", paid: false });
+    }
+    const payload = { borrower, riskScore, source: "institution (x402-paid)", paid: true };
 
     try {
       // indirect specifiers: optional dep resolved only at runtime (see x402.ts).

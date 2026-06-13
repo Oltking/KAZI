@@ -5,6 +5,7 @@ export type RiskSignal = {
   borrower: `0x${string}`;
   riskScore: number; // 0 (safe) .. 100 (risky)
   source: string;
+  paid?: boolean;
 };
 
 /**
@@ -46,7 +47,12 @@ export async function fetchRiskSignalViaX402(
     const res = await doFetch(`${institutionUrl}?borrower=${borrower}`);
     if (!res.ok) return null;
     const signal = (await res.json()) as RiskSignal;
-    record("x402", `risk signal for ${borrower}: ${signal.riskScore} (${signal.source})`);
+    if (signal.paid) {
+      record("x402", `PAID risk signal for ${borrower}: ${signal.riskScore} (${signal.source})`);
+    } else {
+      // honest: no payment settled — this is the unpriced dev path.
+      record("info", `unpriced risk signal for ${borrower}: ${signal.riskScore} (${signal.source})`);
+    }
     return signal;
   } catch {
     return null;
