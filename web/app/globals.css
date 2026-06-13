@@ -604,3 +604,62 @@ a {
   .btn,
   .walletConnectBtn { transition: none; }
 }
+
+/* ---------- Borrow: credit-score gauge ---------- */
+.borrowCard { border-color: var(--line); }
+.creditTop {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 12px 0 14px;
+}
+.creditGaugeWrap { position: relative; width: 104px; height: 104px; flex: none; }
+.creditGauge { display: block; transform: rotate(-90deg); }
+.creditGauge .track { fill: none; stroke: var(--line); stroke-width: 10; }
+.creditGauge .val {
+  fill: none;
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.3s ease;
+}
+.creditCenter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.creditPct { font-size: 27px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.creditPctLabel { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-top: 3px; }
+.creditInfo { flex: 1; min-width: 0; }
+.creditTier { font-weight: 700; font-size: 16px; }
+.creditHint { color: var(--muted); font-size: 13px; line-height: 1.45; margin-top: 4px; }
+.creditScale {
+  position: relative;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--line);
+  margin-top: 12px;
+  overflow: visible;
+}
+.creditScaleFill { height: 100%; border-radius: 999px; transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease; }
+.creditScaleMark {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 13px;
+  background: var(--text);
+  opacity: 0.55;
+  border-radius: 2px;
+  transform: translateX(-1px);
+}
+.creditScaleLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .creditGauge .val, .creditScaleFill { transition: none; }
+}
