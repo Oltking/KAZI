@@ -1,0 +1,45 @@
+# --- Internal idea / spec files (keep local, never push) ---
+KAZI_BUILD_SPEC.md
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# --- Node ---
+node_modules/
+.pnpm-store/
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
+
+# --- Foundry ---
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/lib/
+# keep deployment run latest for reference, drop noisy dry-runs
+!contracts/broadcast/**/run-latest.json
+
+# --- Generated / local artifacts ---
+shared/addresses.local.json
+coverage/
+.coverage
+*.lcov
+
+# --- Editor / OS ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Claude local settings ---
+.claude/settings.local.json

@@ -1,0 +1,17 @@
+{
+  "name": "kazi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kazi — capital-protected, streaming-yield savings agent on Celo.",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test -vv",
+    "agent:dev": "pnpm --filter @kazi/agent dev",
+    "web:dev": "pnpm --filter @kazi/web dev"
+  }
+}
