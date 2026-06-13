@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kazi — your money at work",
+  title: "Kazi · your money at work",
   description:
     "Capital-protected, streaming-yield savings on Celo. Your principal is never put at risk.",
 };

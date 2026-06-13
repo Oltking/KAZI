@@ -58,6 +58,27 @@ function emptyView(configured: boolean): VaultView {
   return { configured, totalAssets: 0n, totalSupply: 0n, deployed: 0n, pendingYield: 0n };
 }
 
+export type PoolStats = {
+  tvl: bigint; // total value saved in Kazi (vault totalAssets)
+  pendingYield: bigint; // accruing, not yet harvested
+  lifetimeYield: bigint; // total yield ever streamed to savers / buffer
+};
+
+/** Real, public pool stats read on-chain — used by the landing page. */
+export async function fetchPoolStats(): Promise<PoolStats | null> {
+  if (!isConfigured) return null;
+  try {
+    const [tvl, pendingYield, lifetimeYield] = await Promise.all([
+      publicClient.readContract({ address: addresses.vault, abi: vaultAbi, functionName: "totalAssets" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.allocator, abi: allocatorAbi, functionName: "pendingYield" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.distributor, abi: distributorAbi, functionName: "lifetimeYieldRealized" }) as Promise<bigint>,
+    ]);
+    return { tvl, pendingYield, lifetimeYield };
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPosition(user: Address): Promise<Position> {
   if (!isConfigured) return { shares: 0n, assets: 0n };
   const shares = (await publicClient.readContract({

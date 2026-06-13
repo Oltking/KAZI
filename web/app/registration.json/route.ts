@@ -15,7 +15,7 @@ export async function GET() {
   return NextResponse.json({
     name: "Kazi",
     description:
-      "Capital-protected, streaming-yield savings agent on Celo. An autonomous fund manager: allocates principal to senior venues, harvests and streams yield to savers, and underwrites yield-funded credit to verified, reputation-scored members — principal is never put at risk.",
+      "Capital-protected, streaming-yield savings agent on Celo. An autonomous fund manager: allocates principal to senior venues, harvests and streams yield to savers, and underwrites yield-funded credit to verified, reputation-scored members. Principal is never put at risk.",
     address: agent,
     chain: addresses.chain,
     capabilities: ["savings-vault", "yield-streaming", "credit-underwriting", "x402"],

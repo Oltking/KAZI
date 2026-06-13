@@ -52,7 +52,7 @@ export default function WalletButton() {
   if (wrongNetwork) {
     return (
       <button className="walletConnectBtn warn" onClick={() => void switchNetwork()}>
-        Wrong network — switch
+        Switch network
       </button>
     );
   }

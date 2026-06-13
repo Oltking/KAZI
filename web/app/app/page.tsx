@@ -154,7 +154,7 @@ export default function Home() {
           <>
             {wrongNetwork && (
               <div className="banner warn">
-                <span>Wrong network — switch to Celo Sepolia to continue.</span>
+                <span>Wrong network. Switch to Celo Sepolia to continue.</span>
                 <button className="btn small" onClick={() => void switchNetwork()}>
                   Switch
                 </button>
@@ -205,7 +205,7 @@ export default function Home() {
               <section className="card verifyCard">
                 <div className="cardLabel">One-time verification</div>
                 <p className="muted verifyIntro">
-                  Kazi uses Self to confirm you&apos;re a unique person — privately, with a zero-knowledge
+                  Kazi uses Self to confirm you&apos;re a unique person, privately, with a zero-knowledge
                   proof. Scan once to unlock deposits.
                 </p>
                 <SelfVerify user={account} onVerified={() => void refresh()} />
@@ -258,7 +258,7 @@ export default function Home() {
               </div>
               <div className="statRow">
                 <span className="muted">Total in Kazi</span>
-                <span className="statVal">{totalInKazi !== null ? totalInKazi.toFixed(2) : "—"} cUSD</span>
+                <span className="statVal">{totalInKazi !== null ? totalInKazi.toFixed(2) : "…"} cUSD</span>
               </div>
             </section>
 
@@ -274,7 +274,7 @@ export default function Home() {
               <ul className="howList">
                 <li>
                   <span className="howIcon"><LockIcon width={16} height={16} /></span>
-                  <span><strong>Your principal stays protected.</strong> Only earnings are ever put to work — the contracts make it impossible to risk your deposit.</span>
+                  <span><strong>Your principal stays protected.</strong> Only earnings are ever put to work. The contracts make it impossible to risk your deposit.</span>
                 </li>
                 <li>
                   <span className="howIcon"><SparkIcon width={16} height={16} /></span>

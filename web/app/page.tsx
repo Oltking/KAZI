@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import "./landing.css";
 import { ShieldIcon, SparkIcon, CheckIcon, FlowIcon, CoinIcon, LockIcon } from "../components/Icons";
+import PoolPreview from "../components/PoolPreview";
 
 export default function Landing() {
   return (
@@ -31,12 +32,12 @@ export default function Landing() {
               <ShieldIcon width={14} height={14} /> Capital-protected savings on Celo
             </span>
             <h1 className="lpH1">
-              Savings that <span className="accent">work for you</span> — without risking your money.
+              Savings that <span className="accent">work for you</span>, without risking your money.
             </h1>
             <p className="lpLede">
               Deposit dollar stablecoins. Your principal is never put at risk. An autonomous agent
-              puts it to work and streams the yield back to you — watch your balance tick up in real
-              time.
+              puts it to work and streams the yield back to you, so you watch your balance tick up in
+              real time.
             </p>
             <div className="lpCtas">
               <Link className="lpBtn accent" href="/app">Launch app →</Link>
@@ -45,17 +46,8 @@ export default function Landing() {
             <p className="lpHeroNote">No token. No lockups. Withdraw anytime. Built for MiniPay.</p>
           </div>
 
-          {/* Hero visual: a balance card */}
-          <div className="lpHeroArt" aria-hidden>
-            <div className="lpArtLabel">Your balance</div>
-            <div className="lpArtBal">1,248<span className="g">.073812</span></div>
-            <div className="lpArtTick"><span className="lpArtDot" /> +0.000041 streaming in…</div>
-            <div className="lpArtRow"><span>Principal</span><span>1,200.00 cUSD</span></div>
-            <div className="lpArtRow" style={{ marginTop: 8, paddingTop: 8, borderTop: "none" }}>
-              <span>Earned</span><span>48.07 cUSD</span>
-            </div>
-            <span className="lpArtChip"><ShieldIcon width={13} height={13} /> Principal protected</span>
-          </div>
+          {/* Hero visual: the LIVE Kazi pool (real on-chain data) */}
+          <PoolPreview />
         </header>
 
         {/* Trust strip */}
@@ -79,7 +71,7 @@ export default function Landing() {
           <div className="lpGrid">
             <Feature icon={<ShieldIcon />} title="Your principal is protected">
               Deposits sit only in conservative, redeemable venues. There is no code path that lets
-              your principal be lent out or put at risk — and tests prove it.
+              your principal be lent out or put at risk, and tests prove it.
             </Feature>
             <Feature icon={<SparkIcon />} title="Yield that streams in real time">
               Earnings come from real lending interest, not inflationary token rewards. Your balance
@@ -90,7 +82,7 @@ export default function Landing() {
               on-chain reputation via ERC-8004.
             </Feature>
             <Feature icon={<CoinIcon />} title="Built for everyday money">
-              Stablecoin-native and mobile-first for MiniPay — every action is a simple transaction,
+              Stablecoin-native and mobile-first for MiniPay. Every action is a simple transaction,
               no confusing signatures.
             </Feature>
           </div>
@@ -105,7 +97,7 @@ export default function Landing() {
           <p>
             A depositor can always redeem their full principal, subject only to the solvency of the
             whitelisted safe venues and available liquidity. Member principal is never lent into the
-            at-risk credit book — the contracts make it impossible. Only accumulated yield is ever
+            at-risk credit book. The contracts make it impossible. Only accumulated yield is ever
             exposed to credit risk, absorbed by a first-loss buffer before any saver is touched.
           </p>
           <Link className="lpBtn onDark" href="/app">Start saving →</Link>
@@ -122,7 +114,7 @@ export default function Landing() {
           <div className="lpSteps">
             <Step n={1} title="Deposit">Add dollar stablecoins (cUSD). You receive vault shares.</Step>
             <Step n={2} title="Put to work">The agent allocates your principal to safe, audited venues.</Step>
-            <Step n={3} title="Earn, live">Yield is harvested and streams back — your balance grows.</Step>
+            <Step n={3} title="Earn, live">Yield is harvested and streams back, so your balance grows.</Step>
             <Step n={4} title="Withdraw">Take out your principal plus earnings, any time.</Step>
           </div>
         </section>

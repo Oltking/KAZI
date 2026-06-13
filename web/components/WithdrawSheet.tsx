@@ -81,7 +81,7 @@ export default function WithdrawSheet({
             <div className="withdrawTotal">
               {redeemable.toFixed(4)} <span className="muted">cUSD</span>
             </div>
-            <p className="muted">Your full balance — principal plus earnings.</p>
+            <p className="muted">Your full balance: principal plus earnings.</p>
             {earned > 0 && (
               <div className="withdrawEarned">
                 <span className="muted">Earned</span>

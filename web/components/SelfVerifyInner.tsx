@@ -45,7 +45,7 @@ export default function SelfVerifyInner({
       <SelfQRcodeWrapper selfApp={app} onSuccess={onVerified} onError={() => undefined} />
       <p className="muted" style={{ textAlign: "center" }}>
         Scan with the <a href="https://self.xyz" target="_blank" rel="noreferrer">Self</a> app
-        to verify — privacy-preserving, 18+. Your on-chain status updates automatically once the
+        to verify (privacy-preserving, 18+). Your on-chain status updates automatically once the
         proof is accepted.
       </p>
     </div>
