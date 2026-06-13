@@ -18,6 +18,7 @@ import {
   fetchVaultView,
   getTestFunds,
   isSelfVerified,
+  triggerTick,
   walletBalance,
   withdrawAll,
   isConfigured,
@@ -90,12 +91,21 @@ export default function Home() {
     })();
   }, []);
 
-  // poll on-chain / agent state
+  // poll on-chain state
   useEffect(() => {
     void refresh();
     const id = setInterval(() => void refresh(), 10_000);
     return () => clearInterval(id);
   }, [refresh]);
+
+  // keep the protocol live while the app is open: nudge the agent tick to
+  // allocate idle principal + harvest yield (server-side, real txs). The route
+  // no-ops unless there's real work, so this won't churn.
+  useEffect(() => {
+    void triggerTick();
+    const id = setInterval(() => void triggerTick(), 45_000);
+    return () => clearInterval(id);
+  }, []);
 
   // smooth per-second ticker: project redeemable value forward at the realized rate
   useEffect(() => {
@@ -118,6 +128,7 @@ export default function Home() {
       await deposit(account, amount);
       setMode(null);
       setAmount("");
+      await triggerTick(); // allocate the fresh deposit so it starts earning
       await refresh();
     } catch (e) {
       setError(humanError(e));

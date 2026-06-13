@@ -11,13 +11,27 @@ the `@kazi/shared` workspace package resolves correctly).
 3. **Framework Preset:** Next.js (auto-detected).
 4. **Install / Build:** leave defaults — Vercel uses pnpm and the workspace
    lockfile automatically. (Build: `next build`, Install: `pnpm install`.)
-5. **Environment variables** — none are strictly required (the code defaults to
-   Celo Sepolia + scope `kazi`). Optional, to be explicit:
-   - `NEXT_PUBLIC_CHAIN = sepolia`
-   - `NEXT_PUBLIC_SELF_SCOPE_SEED = kazi`
-   - `NEXT_PUBLIC_AGENT_URL = <public agent URL>` (only if you host the agent;
-     without it the balance/ticker still work from direct on-chain reads, the
-     activity feed is just empty)
+5. **Environment variables:**
+   - `KAZI_AGENT_KEY` — **set this** (server-side, NOT `NEXT_PUBLIC`). It's the
+     funded agent key from your local `.env` (`AGENT_PRIVATE_KEY`). The app's
+     `/api/tick` route uses it to allocate idle deposits + harvest yield so the
+     product actually earns. Without it deposits/withdraws still work but nothing
+     is allocated/harvested automatically.
+   - `NEXT_PUBLIC_CHAIN = sepolia` *(optional — already the default)*
+   - `NEXT_PUBLIC_SELF_SCOPE_SEED = kazi` *(optional — already the default)*
+
+   The vault balance, ticker, and activity feed all read **directly on-chain**,
+   so no separately hosted agent server is needed.
+
+### Keep it earning even when no one's watching (optional)
+
+The app nudges `/api/tick` while a tab is open. To also harvest on a schedule,
+add a Vercel Cron (Pro plan; Hobby runs crons at most daily) — create
+`vercel.json` in `web/`:
+
+```json
+{ "crons": [{ "path": "/api/tick", "schedule": "*/5 * * * *" }] }
+```
 6. **Deploy.** You get a public URL (e.g. `https://kazi-xxx.vercel.app`).
 
 Every push to `main` redeploys automatically. The committed

@@ -1,8 +1,8 @@
 "use client";
 
 import { type Address, formatUnits, parseUnits } from "viem";
-import { addresses, vaultAbi, erc20Abi, selfGateAbi } from "@kazi/shared";
-import { publicClient, getWalletClient, AGENT_URL } from "./chain";
+import { addresses, vaultAbi, allocatorAbi, distributorAbi, erc20Abi, selfGateAbi } from "@kazi/shared";
+import { publicClient, getWalletClient } from "./chain";
 
 export const ASSET_DECIMALS = 18; // cUSD / MockUSD
 
@@ -39,25 +39,18 @@ export function impliedApy(v: VaultView): number {
 }
 
 export async function fetchVaultView(): Promise<VaultView> {
+  // Read directly on-chain so the deployed app needs no hosted agent server.
+  if (!isConfigured) return emptyView(false);
   try {
-    const res = await fetch(`${AGENT_URL}/vault`, { cache: "no-store" });
-    const j = await res.json();
-    if (!j.configured) return emptyView(false);
-    return {
-      configured: true,
-      totalAssets: BigInt(j.totalAssets),
-      totalSupply: BigInt(j.totalSupply),
-      deployed: BigInt(j.deployed),
-      pendingYield: BigInt(j.pendingYield),
-    };
-  } catch {
-    // fall back to direct on-chain reads if the agent server is down.
-    if (!isConfigured) return emptyView(false);
-    const [totalAssets, totalSupply] = await Promise.all([
-      publicClient.readContract({ address: addresses.vault, abi: vaultAbi, functionName: "totalAssets" }),
-      publicClient.readContract({ address: addresses.vault, abi: vaultAbi, functionName: "totalSupply" }),
+    const [totalAssets, totalSupply, deployed, pendingYield] = await Promise.all([
+      publicClient.readContract({ address: addresses.vault, abi: vaultAbi, functionName: "totalAssets" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.vault, abi: vaultAbi, functionName: "totalSupply" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.allocator, abi: allocatorAbi, functionName: "totalDeployedValue" }) as Promise<bigint>,
+      publicClient.readContract({ address: addresses.allocator, abi: allocatorAbi, functionName: "pendingYield" }) as Promise<bigint>,
     ]);
-    return { configured: true, totalAssets, totalSupply, deployed: 0n, pendingYield: 0n };
+    return { configured: true, totalAssets, totalSupply, deployed, pendingYield };
+  } catch {
+    return emptyView(true);
   }
 }
 
@@ -193,11 +186,48 @@ export type ActivityEvent = {
   txHash?: string;
 };
 
-export async function fetchActivity(): Promise<ActivityEvent[]> {
+/** Nudge the server-side agent tick (allocate idle principal + harvest yield).
+ *  Best-effort; the route only transacts when there is real work to do. */
+export async function triggerTick(): Promise<void> {
   try {
-    const res = await fetch(`${AGENT_URL}/activity`, { cache: "no-store" });
-    const j = await res.json();
-    return j.events ?? [];
+    await fetch("/api/tick", { method: "POST" });
+  } catch {
+    /* ignore — the next nudge will retry */
+  }
+}
+
+/** Real on-chain activity, read from contract events — no hosted agent needed.
+ *  Queries a recent block window (public nodes cap getLogs range). */
+export async function fetchActivity(): Promise<ActivityEvent[]> {
+  if (!isConfigured) return [];
+  try {
+    const latest = await publicClient.getBlockNumber();
+    const fromBlock = latest > 9000n ? latest - 9000n : 0n;
+    const safe = <T,>(p: Promise<T[]>) => p.catch(() => [] as T[]);
+    const [harvests, allocs, deposits, distributed] = await Promise.all([
+      safe(publicClient.getContractEvents({ address: addresses.allocator, abi: allocatorAbi, eventName: "Harvested", fromBlock })),
+      safe(publicClient.getContractEvents({ address: addresses.allocator, abi: allocatorAbi, eventName: "Allocated", fromBlock })),
+      safe(publicClient.getContractEvents({ address: addresses.vault, abi: vaultAbi, eventName: "Deposit", fromBlock })),
+      safe(publicClient.getContractEvents({ address: addresses.distributor, abi: distributorAbi, eventName: "YieldDistributed", fromBlock })),
+    ]);
+    type RawLog = { blockNumber: bigint | null; transactionHash: string | null; args?: Record<string, unknown> };
+    const out: ActivityEvent[] = [];
+    const push = (logs: readonly unknown[], kind: string, detail: (a: Record<string, unknown>) => string) => {
+      for (const raw of logs) {
+        const l = raw as RawLog;
+        out.push({
+          ts: Number(l.blockNumber ?? 0n),
+          kind,
+          detail: detail(l.args ?? {}),
+          txHash: l.transactionHash ?? undefined,
+        });
+      }
+    };
+    push(harvests, "harvest", (a) => `realized ${fmt((a.yield as bigint) ?? 0n)} cUSD`);
+    push(allocs, "allocate", (a) => `deployed ${fmt((a.amount as bigint) ?? 0n)} cUSD`);
+    push(deposits, "deposit", (a) => `${fmt((a.assets as bigint) ?? 0n)} cUSD in`);
+    push(distributed, "distribute", (a) => `streamed ${fmt((a.toStream as bigint) ?? 0n)} cUSD`);
+    return out.sort((x, y) => y.ts - x.ts).slice(0, 30);
   } catch {
     return [];
   }
