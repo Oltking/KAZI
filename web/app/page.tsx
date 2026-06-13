@@ -1,46 +1,46 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Address } from "viem";
 import { formatUnits } from "viem";
-import {
-  hasInjectedProvider,
-  isMiniPay,
-  getAccount,
-  ensureChain,
-} from "../lib/chain";
+import { useWallet } from "../lib/wallet";
+import { isMiniPay } from "../lib/chain";
 import SelfVerify from "../components/SelfVerify";
+import WalletButton from "../components/WalletButton";
+import DepositSheet from "../components/DepositSheet";
+import WithdrawSheet from "../components/WithdrawSheet";
+import ActivityFeed from "../components/ActivityFeed";
+import { ShieldIcon, CheckIcon, LockIcon, SparkIcon, ArrowDownIcon, ArrowUpIcon, FlowIcon } from "../components/Icons";
 import {
   ASSET_DECIMALS,
-  deposit,
   fetchActivity,
   fetchPosition,
   fetchVaultView,
-  getTestFunds,
   isSelfVerified,
   triggerTick,
   walletBalance,
-  withdrawAll,
   isConfigured,
+  fmt,
   type ActivityEvent,
   type Position,
   type VaultView,
 } from "../lib/kazi";
 
 type Sample = { m: number; t: number }; // economic value M (in tokens), wall-clock ms
+const SECONDS_PER_YEAR = 31_536_000;
 
 export default function Home() {
-  const [account, setAccount] = useState<Address | null>(null);
+  const { ready, account, status, wrongNetwork, hasProvider, isMiniPay: mini, switchNetwork } = useWallet();
+
   const [vault, setVault] = useState<VaultView | null>(null);
   const [position, setPosition] = useState<Position>({ shares: 0n, assets: 0n });
   const [wallet, setWallet] = useState<bigint>(0n);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [verified, setVerified] = useState<boolean | null>(null); // real on-chain Self status
   const [display, setDisplay] = useState<number>(0); // live projected redeemable value
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<null | "deposit" | "withdraw">(null);
-  const [amount, setAmount] = useState("");
+  const [apy, setApy] = useState<number | null>(null); // realized, derived from on-chain samples
+  const [loadingState, setLoadingState] = useState(true);
+  const [sheet, setSheet] = useState<null | "deposit" | "withdraw">(null);
 
   // ticker projection state
   const ratePerSec = useRef(0); // realized token growth/sec of economic value M
@@ -58,6 +58,10 @@ export default function Home() {
       const r = (m - lastSample.current.m) / dt;
       // only trust non-negative realized growth for the forward projection.
       ratePerSec.current = r > 0 ? r : 0;
+      // honest realized APY: annualize the per-second growth fraction of M.
+      if (baseM.current > 0 && ratePerSec.current > 0) {
+        setApy((ratePerSec.current / baseM.current) * SECONDS_PER_YEAR);
+      }
     }
     lastSample.current = { m, t: now };
     baseM.current = m || 1;
@@ -73,26 +77,21 @@ export default function Home() {
       setVerified(isVer);
       baseAssets.current = Number(formatUnits(pos.assets, ASSET_DECIMALS));
       setDisplay(baseAssets.current);
+    } else {
+      setPosition({ shares: 0n, assets: 0n });
+      setWallet(0n);
+      setVerified(null);
+      baseAssets.current = 0;
+      setDisplay(0);
     }
     setActivity(await fetchActivity());
+    setActivityLoading(false);
+    setLoadingState(false);
   }, [account]);
 
-  // implicit connection (no connect button inside MiniPay)
+  // poll on-chain state (keep the 10s refresh)
   useEffect(() => {
-    (async () => {
-      if (!hasInjectedProvider()) return;
-      try {
-        const acct = await getAccount();
-        if (acct) await ensureChain(); // put the wallet on Celo Sepolia
-        setAccount(acct);
-      } catch {
-        /* never block the UI on connection */
-      }
-    })();
-  }, []);
-
-  // poll on-chain state
-  useEffect(() => {
+    setLoadingState(true);
     void refresh();
     const id = setInterval(() => void refresh(), 10_000);
     return () => clearInterval(id);
@@ -109,6 +108,8 @@ export default function Home() {
 
   // smooth per-second ticker: project redeemable value forward at the realized rate
   useEffect(() => {
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const period = reduce ? 1000 : 100;
     const id = setInterval(() => {
       const s = lastSample.current;
       if (!s || baseM.current <= 0 || baseAssets.current <= 0) return;
@@ -116,218 +117,206 @@ export default function Home() {
       const projectedM = s.m + ratePerSec.current * elapsed;
       const ratio = projectedM / baseM.current;
       setDisplay(baseAssets.current * ratio);
-    }, 100);
+    }, period);
     return () => clearInterval(id);
   }, []);
 
-  async function onDeposit() {
-    if (!account) return;
-    setError(null);
-    setBusy("Depositing…");
-    try {
-      await deposit(account, amount);
-      setMode(null);
-      setAmount("");
-      await triggerTick(); // allocate the fresh deposit so it starts earning
-      await refresh();
-    } catch (e) {
-      setError(humanError(e));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function onGetFunds() {
-    if (!account) return;
-    setError(null);
-    setBusy("Getting test cUSD…");
-    try {
-      await getTestFunds(account, "100");
-      await refresh();
-    } catch (e) {
-      setError(humanError(e));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function onWithdraw() {
-    if (!account) return;
-    setError(null);
-    setBusy("Withdrawing…");
-    try {
-      await withdrawAll(account, position.shares);
-      setMode(null);
-      await refresh();
-    } catch (e) {
-      setError(humanError(e));
-    } finally {
-      setBusy(null);
-    }
-  }
-
   const [whole, frac] = display.toFixed(6).split(".");
   const earned = Math.max(0, display - baseAssets.current);
+  const connected = status === "connected" && !!account;
+  const hasPosition = position.shares > 0n;
+  const totalInKazi = vault ? Number(formatUnits(vault.totalAssets, ASSET_DECIMALS)) : null;
 
   return (
-    <main className="app">
-      <div className="brand">
-        <span className="dot" /> Kazi
-      </div>
-      <p className="tagline">Your money at work — principal protected, yield streaming in.</p>
-
-      {!isConfigured && (
-        <div className="card">
-          <div className="label">Setting up</div>
-          <p className="muted">
-            Contracts aren&apos;t deployed yet. Run the deploy script and the agent, then this
-            screen goes live with your real on-chain balance.
-          </p>
-        </div>
-      )}
-
-      {/* Headline balance + live ticker */}
-      <div className="card">
-        <div className="label">Your balance</div>
-        <div className="balance">
-          {Number(whole).toLocaleString()}
-          <span className="cents">.{frac}</span>
-          <span style={{ fontSize: 16, color: "var(--muted)", fontWeight: 500 }}> cUSD</span>
-        </div>
-        <div className="ticker-row">
-          <span className="pulse" />
-          {earned > 0 ? `+${earned.toFixed(6)} earned this session` : "watching for yield…"}
-        </div>
-      </div>
-
-      {/* Principal guarantee — trust is the product */}
-      <div className="guarantee">
-        <span className="shield">🛡️</span>
-        <span>
-          <strong>Your principal is protected.</strong> Only earnings are ever put to work, and
-          the contracts make it impossible to risk your deposit.
-        </span>
-      </div>
-
-      {/* Self verification — real ZK passport flow; on-chain status, never faked */}
-      {account && verified === false && (
-        <div className="card">
-          <div className="label">One-time verification</div>
-          <SelfVerify user={account} onVerified={() => void refresh()} />
-        </div>
-      )}
-      {account && verified === true && (
-        <div className="ticker-row" style={{ margin: "0 0 14px 2px" }}>
-          ✅ Self-verified
-        </div>
-      )}
-
-      {/* Position details */}
-      <div className="card">
-        <div className="row">
-          <span className="muted">Vault shares</span>
-          <span className="v">{position.shares === 0n ? "0" : formatUnits(position.shares, ASSET_DECIMALS)}</span>
-        </div>
-        <div className="row">
-          <span className="muted">In your wallet</span>
-          <span className="v">{Number(formatUnits(wallet, ASSET_DECIMALS)).toFixed(2)} cUSD</span>
-        </div>
-        {account && wallet < 1_000000000000000000n && (
-          <button onClick={onGetFunds} disabled={!!busy} style={{ width: "100%", marginBottom: 6 }}>
-            {busy === "Getting test cUSD…" ? busy : "Get 100 test cUSD"}
-          </button>
-        )}
-        <div className="row">
-          <span className="muted">Total in Kazi</span>
-          <span className="v">
-            {vault ? Number(formatUnits(vault.totalAssets, ASSET_DECIMALS)).toFixed(2) : "—"} cUSD
-          </span>
-        </div>
-
-        {mode === null && (
-          <div className="btns">
-            <button
-              className="primary"
-              onClick={() => setMode("deposit")}
-              disabled={!account || verified === false}
-            >
-              Deposit
-            </button>
-            <button onClick={() => setMode("withdraw")} disabled={!account || position.shares === 0n}>
-              Withdraw
-            </button>
+    <>
+      <header className="appHeader">
+        <div className="appHeaderInner">
+          <div className="brand">
+            <span className="brandMark" aria-hidden>
+              <FlowIcon width={18} height={18} />
+            </span>
+            <span className="brandName">Kazi</span>
           </div>
-        )}
+          <WalletButton />
+        </div>
+      </header>
 
-        {mode === "deposit" && (
-          <div>
-            <input
-              className="input"
-              inputMode="decimal"
-              placeholder="Amount in cUSD"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-            <div className="btns">
-              <button className="primary" onClick={onDeposit} disabled={!!busy || !amount}>
-                {busy ?? "Confirm deposit"}
-              </button>
-              <button onClick={() => setMode(null)} disabled={!!busy}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mode === "withdraw" && (
-          <div>
+      <main className="app">
+        {!isConfigured ? (
+          <section className="card">
+            <div className="cardLabel">Setting up</div>
             <p className="muted">
-              Withdraw your full balance ({display.toFixed(4)} cUSD) — principal plus everything
-              you&apos;ve earned.
+              Kazi isn&apos;t connected to its contracts yet. Once deployment is complete, this screen
+              goes live with your real on-chain balance.
             </p>
-            <div className="btns">
-              <button className="primary" onClick={onWithdraw} disabled={!!busy}>
-                {busy ?? "Confirm withdraw"}
+          </section>
+        ) : (
+          <>
+            {wrongNetwork && (
+              <div className="banner warn">
+                <span>Wrong network — switch to Celo Sepolia to continue.</span>
+                <button className="btn small" onClick={() => void switchNetwork()}>
+                  Switch
+                </button>
+              </div>
+            )}
+
+            {/* Hero balance + live ticker */}
+            <section className="hero">
+              <div className="heroTop">
+                <span className="cardLabel">Your balance</span>
+                <span className="apyPill" title="Realized rate from on-chain yield">
+                  <SparkIcon width={13} height={13} />
+                  {apy !== null && apy > 0 ? `${(apy * 100).toFixed(2)}% APY` : "Earning"}
+                </span>
+              </div>
+
+              {loadingState && !vault ? (
+                <div className="skeleton skelBalance" />
+              ) : (
+                <div className="balance">
+                  {Number(whole).toLocaleString()}
+                  <span className="cents">.{frac}</span>
+                  <span className="balanceUnit"> cUSD</span>
+                </div>
+              )}
+
+              <div className="tickerRow">
+                <span className="pulse" aria-hidden />
+                {connected
+                  ? earned > 0
+                    ? `+${earned.toFixed(6)} earned this session`
+                    : hasPosition
+                      ? "Watching for yield…"
+                      : "Deposit to start earning"
+                  : "Connect your wallet to see your balance"}
+              </div>
+
+              <div className="trustBadge">
+                <ShieldIcon width={15} height={15} />
+                Principal protected
+              </div>
+            </section>
+
+            {/* Wrong-network / not-connected gating handled in actions */}
+
+            {/* Verification gate (real on-chain status) */}
+            {connected && verified === false && (
+              <section className="card verifyCard">
+                <div className="cardLabel">One-time verification</div>
+                <p className="muted verifyIntro">
+                  Kazi uses Self to confirm you&apos;re a unique person — privately, with a zero-knowledge
+                  proof. Scan once to unlock deposits.
+                </p>
+                <SelfVerify user={account} onVerified={() => void refresh()} />
+              </section>
+            )}
+
+            {/* Primary actions */}
+            <section className="actions">
+              <button
+                className="btn primary action"
+                onClick={() => setSheet("deposit")}
+                disabled={!connected || wrongNetwork || verified === false}
+              >
+                <ArrowDownIcon width={18} height={18} />
+                Deposit
               </button>
-              <button onClick={() => setMode(null)} disabled={!!busy}>
-                Cancel
+              <button
+                className="btn action"
+                onClick={() => setSheet("withdraw")}
+                disabled={!connected || wrongNetwork || !hasPosition}
+              >
+                <ArrowUpIcon width={18} height={18} />
+                Withdraw
               </button>
-            </div>
-          </div>
+            </section>
+
+            {connected && verified === true && (
+              <div className="verifiedBadge">
+                <CheckIcon width={14} height={14} />
+                Self-verified
+              </div>
+            )}
+
+            {!connected && !mini && (
+              <p className="muted hint center">
+                {hasProvider ? "Connect your wallet to deposit." : "Open Kazi in MiniPay to get started."}
+              </p>
+            )}
+
+            {/* Position details */}
+            <section className="card">
+              <div className="cardLabel">Position</div>
+              <div className="statRow">
+                <span className="muted">In your wallet</span>
+                <span className="statVal">{Number(formatUnits(wallet, ASSET_DECIMALS)).toFixed(2)} cUSD</span>
+              </div>
+              <div className="statRow">
+                <span className="muted">Your shares</span>
+                <span className="statVal">{position.shares === 0n ? "0" : fmt(position.shares, 4)}</span>
+              </div>
+              <div className="statRow">
+                <span className="muted">Total in Kazi</span>
+                <span className="statVal">{totalInKazi !== null ? totalInKazi.toFixed(2) : "—"} cUSD</span>
+              </div>
+            </section>
+
+            {/* Activity */}
+            <section className="card">
+              <div className="cardLabel">Activity</div>
+              <ActivityFeed events={activity} loading={activityLoading} />
+            </section>
+
+            {/* How it works / trust */}
+            <section className="card howCard">
+              <div className="cardLabel">How it works</div>
+              <ul className="howList">
+                <li>
+                  <span className="howIcon"><LockIcon width={16} height={16} /></span>
+                  <span><strong>Your principal stays protected.</strong> Only earnings are ever put to work — the contracts make it impossible to risk your deposit.</span>
+                </li>
+                <li>
+                  <span className="howIcon"><SparkIcon width={16} height={16} /></span>
+                  <span><strong>Yield streams in.</strong> An agent allocates funds and harvests yield, which flows back to your balance second by second.</span>
+                </li>
+                <li>
+                  <span className="howIcon"><ArrowUpIcon width={16} height={16} /></span>
+                  <span><strong>Withdraw anytime.</strong> Redeem your shares for principal plus everything you&apos;ve earned, instantly.</span>
+                </li>
+              </ul>
+            </section>
+
+            <footer className="appFooter">
+              <span>{isMiniPay() ? "Running in MiniPay" : "Built for MiniPay on Celo"}</span>
+              <a href="https://celo.org" target="_blank" rel="noreferrer">
+                Powered by Celo
+              </a>
+            </footer>
+          </>
         )}
+      </main>
 
-        {error && <div className="notice">{error}</div>}
-        {!account && isConfigured && (
-          <div className="notice">
-            {hasInjectedProvider()
-              ? "Connecting to your wallet…"
-              : "Open this Mini App inside MiniPay to deposit."}
-          </div>
-        )}
-      </div>
-
-      {/* Live activity from the agent */}
-      <div className="card">
-        <div className="label">Agent activity</div>
-        {activity.length === 0 && <p className="muted">No activity yet.</p>}
-        {activity.map((e, i) => (
-          <div className="feed-item" key={i}>
-            <span className="kind">{e.kind}</span>
-            <span className="detail">{e.detail}</span>
-          </div>
-        ))}
-      </div>
-
-      <p className="muted" style={{ textAlign: "center" }}>
-        {isMiniPay() ? "Running in MiniPay" : "Built for MiniPay on Celo"}
-      </p>
-    </main>
+      {connected && (
+        <>
+          <DepositSheet
+            open={sheet === "deposit"}
+            account={account}
+            walletBal={wallet}
+            onClose={() => setSheet(null)}
+            onSettled={refresh}
+          />
+          <WithdrawSheet
+            open={sheet === "withdraw"}
+            account={account}
+            shares={position.shares}
+            redeemable={display}
+            earned={earned}
+            onClose={() => setSheet(null)}
+            onSettled={refresh}
+          />
+        </>
+      )}
+    </>
   );
-}
-
-function humanError(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String(e);
-  if (msg.includes("not verified")) return "You need to complete Self verification first.";
-  if (msg.toLowerCase().includes("rejected")) return "Transaction cancelled.";
-  return msg.length > 120 ? msg.slice(0, 120) + "…" : msg;
 }
