@@ -108,7 +108,10 @@ contract Deploy is Script {
         vm.serializeAddress(json, "distributor", distributor);
         vm.serializeAddress(json, "senior", senior);
         vm.serializeAddress(json, "allocator", allocator);
-        string memory out = vm.serializeAddress(json, "creditBook", credit);
+        vm.serializeAddress(json, "creditBook", credit);
+        // record the operating agent (the deployer/operator) so the ERC-8004
+        // card and UI never need a hardcoded address.
+        string memory out = vm.serializeAddress(json, "agent", msg.sender);
 
         string memory path = "../shared/addresses.json";
         vm.writeJson(out, path);

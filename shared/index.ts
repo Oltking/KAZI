@@ -19,6 +19,7 @@ export type KaziAddresses = {
   creditBook: `0x${string}`;
   selfVerifier?: `0x${string}`;
   selfHub?: `0x${string}`;
+  agent?: `0x${string}`;
 };
 
 export const addresses = addressesJson as KaziAddresses;

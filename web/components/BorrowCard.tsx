@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Address } from "viem";
 import { formatUnits } from "viem";
 import { CoinIcon } from "./Icons";
-import { ASSET_DECIMALS, fetchCredit, requestLoan, repayLoan, fmt, type CreditState } from "../lib/kazi";
+import { ASSET_DECIMALS, fetchCredit, refreshReputation, requestLoan, repayLoan, fmt, type CreditState } from "../lib/kazi";
 import { humanError } from "../lib/errors";
 
 type Phase = "idle" | "confirm" | "pending";
@@ -35,6 +35,8 @@ export default function BorrowCard({
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    // recompute reputation from real on-chain saving first, then read state
+    await refreshReputation(account);
     setC(await fetchCredit(account));
   }, [account]);
 

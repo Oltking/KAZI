@@ -11,7 +11,7 @@ export const runtime = "nodejs";
  * scripts/update-agent-uri.sh).
  */
 export async function GET() {
-  const agent = process.env.NEXT_PUBLIC_AGENT_ADDRESS ?? "0x321E43713F9242B4642E61B3D17edE5b540c2747";
+  const agent = addresses.agent ?? process.env.NEXT_PUBLIC_AGENT_ADDRESS ?? null;
   return NextResponse.json({
     name: "Kazi",
     description:

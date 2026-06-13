@@ -223,6 +223,16 @@ export type CreditState = {
   owed: bigint; // principal + interest if active, else 0
 };
 
+/** Ask the agent to recompute this member's reputation from their real on-chain
+ *  saving + repayment history (server-side, writes only if it changed). */
+export async function refreshReputation(user: Address): Promise<void> {
+  try {
+    await fetch(`/api/reputation?user=${user}`, { method: "POST" });
+  } catch {
+    /* best effort; the gauge reads the on-chain score regardless */
+  }
+}
+
 export async function fetchCredit(user: Address): Promise<CreditState | null> {
   if (!isConfigured) return null;
   try {
