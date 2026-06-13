@@ -71,12 +71,18 @@ a {
 .brandMark {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #fff;
   border: 1px solid var(--line);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.brandMark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .brandName {

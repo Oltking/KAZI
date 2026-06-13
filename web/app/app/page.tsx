@@ -10,7 +10,7 @@ import DepositSheet from "../../components/DepositSheet";
 import WithdrawSheet from "../../components/WithdrawSheet";
 import ActivityFeed from "../../components/ActivityFeed";
 import BorrowCard from "../../components/BorrowCard";
-import { ShieldIcon, CheckIcon, LockIcon, SparkIcon, ArrowDownIcon, ArrowUpIcon, FlowIcon } from "../../components/Icons";
+import { ShieldIcon, CheckIcon, LockIcon, SparkIcon, ArrowDownIcon, ArrowUpIcon } from "../../components/Icons";
 import {
   ASSET_DECIMALS,
   fetchActivity,
@@ -134,7 +134,7 @@ export default function Home() {
         <div className="appHeaderInner">
           <a className="brand" href="/" aria-label="Kazi home">
             <span className="brandMark" aria-hidden>
-              <FlowIcon width={18} height={18} />
+              <img src="/kazi.webp" alt="" width={32} height={32} />
             </span>
             <span className="brandName">Kazi</span>
           </a>

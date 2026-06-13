@@ -10,9 +10,28 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://kazi-agent.vercel.app"),
   title: "Kazi · your money at work",
   description:
     "Capital-protected, streaming-yield savings on Celo. Your principal is never put at risk.",
+  icons: {
+    icon: [{ url: "/kazi.webp", type: "image/webp" }],
+    shortcut: ["/kazi.webp"],
+    apple: [{ url: "/kazi.webp" }],
+  },
+  openGraph: {
+    title: "Kazi · your money at work",
+    description:
+      "Capital-protected, streaming-yield savings on Celo. Your principal is never put at risk.",
+    images: [{ url: "/kazi.webp", width: 512, height: 512, alt: "Kazi" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Kazi · your money at work",
+    description: "Capital-protected, streaming-yield savings on Celo.",
+    images: ["/kazi.webp"],
+  },
 };
 
 export const viewport: Viewport = {

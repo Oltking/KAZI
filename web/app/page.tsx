@@ -12,7 +12,7 @@ export default function Landing() {
         <div className="lpNavInner">
           <Link href="/" className="lpBrand">
             <span className="lpBrandMark">
-              <FlowIcon width={18} height={18} />
+              <img src="/kazi.webp" alt="Kazi" width={30} height={30} />
             </span>
             Kazi
           </Link>
