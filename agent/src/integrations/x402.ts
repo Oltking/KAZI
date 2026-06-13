@@ -55,7 +55,10 @@ export async function fetchRiskSignalViaX402(
   try {
     const doFetch = await paidFetch();
     const res = await doFetch(`${institutionUrl}?borrower=${borrower}`);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error("[x402] paid response not ok:", res.status, await res.text().catch(() => ""));
+      return null;
+    }
     const signal = (await res.json()) as RiskSignal;
     if (signal.paid) {
       record("x402", `PAID risk signal for ${borrower}: ${signal.riskScore} (${signal.source})`);

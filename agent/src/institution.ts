@@ -64,7 +64,8 @@ export function startInstitutionAgent(): void {
       const result = await settlePayment({
         resourceUrl: new URL(c.req.url).toString(),
         method: "GET",
-        paymentData: c.req.header("x-payment"),
+        // v2 sends the proof in PAYMENT-SIGNATURE; v1 in X-PAYMENT.
+        paymentData: c.req.header("payment-signature") ?? c.req.header("x-payment"),
         payTo: config.x402PayTo,
         // thirdweb expects a CAIP-2 network id. Celo mainnet = eip155:42220,
         // Celo Sepolia = eip155:11142220.
