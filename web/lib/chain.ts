@@ -46,6 +46,36 @@ export function getWalletClient() {
   return createWalletClient({ chain: CHAIN, transport: custom(window.ethereum) });
 }
 
+/** Ensure the injected wallet is on the right Celo network; add it if unknown.
+ *  MiniPay is always on Celo, so this is a no-op there; it matters for desktop
+ *  wallets like MetaMask. */
+export async function ensureChain(): Promise<void> {
+  if (!window.ethereum) return;
+  const hexId = `0x${CHAIN.id.toString(16)}`;
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: hexId }],
+    });
+  } catch (err: unknown) {
+    // 4902 = chain not added yet → add it, then it becomes selected.
+    if ((err as { code?: number })?.code === 4902) {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: hexId,
+            chainName: CHAIN.name,
+            nativeCurrency: CHAIN.nativeCurrency,
+            rpcUrls: CHAIN.rpcUrls.default.http,
+            blockExplorerUrls: CHAIN.blockExplorers ? [CHAIN.blockExplorers.default.url] : [],
+          },
+        ],
+      });
+    }
+  }
+}
+
 /** Implicit connection: read the already-authorized account (no connect button
  *  in MiniPay). Falls back to eth_requestAccounts only outside MiniPay. */
 export async function getAccount(): Promise<Address | null> {

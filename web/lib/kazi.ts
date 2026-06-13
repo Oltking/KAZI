@@ -111,6 +111,33 @@ export async function walletBalance(user: Address): Promise<bigint> {
   }) as Promise<bigint>;
 }
 
+/** Get test cUSD: mints the demo MockUSD to the user (testnet only — the
+ *  asset is the demo MockUSD whose mint is open). A real tx the user signs. */
+const mintAbi = [
+  {
+    type: "function",
+    name: "mint",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+  },
+] as const;
+
+export async function getTestFunds(user: Address, human = "100"): Promise<`0x${string}`> {
+  const wallet = getWalletClient();
+  return wallet.writeContract({
+    account: user,
+    address: addresses.asset,
+    abi: mintAbi,
+    functionName: "mint",
+    args: [user, parseUnits(human, ASSET_DECIMALS)],
+    type: "legacy",
+  });
+}
+
 /** Deposit cUSD: approve (if needed) then vault.deposit. Both are plain
  *  transactions — no message signing (MiniPay constraint). Legacy tx type. */
 export async function deposit(user: Address, human: string): Promise<`0x${string}`> {

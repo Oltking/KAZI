@@ -7,6 +7,7 @@ import {
   hasInjectedProvider,
   isMiniPay,
   getAccount,
+  ensureChain,
 } from "../lib/chain";
 import SelfVerify from "../components/SelfVerify";
 import {
@@ -15,6 +16,7 @@ import {
   fetchActivity,
   fetchPosition,
   fetchVaultView,
+  getTestFunds,
   isSelfVerified,
   walletBalance,
   withdrawAll,
@@ -79,7 +81,9 @@ export default function Home() {
     (async () => {
       if (!hasInjectedProvider()) return;
       try {
-        setAccount(await getAccount());
+        const acct = await getAccount();
+        if (acct) await ensureChain(); // put the wallet on Celo Sepolia
+        setAccount(acct);
       } catch {
         /* never block the UI on connection */
       }
@@ -114,6 +118,20 @@ export default function Home() {
       await deposit(account, amount);
       setMode(null);
       setAmount("");
+      await refresh();
+    } catch (e) {
+      setError(humanError(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function onGetFunds() {
+    if (!account) return;
+    setError(null);
+    setBusy("Getting test cUSD…");
+    try {
+      await getTestFunds(account, "100");
       await refresh();
     } catch (e) {
       setError(humanError(e));
@@ -203,6 +221,11 @@ export default function Home() {
           <span className="muted">In your wallet</span>
           <span className="v">{Number(formatUnits(wallet, ASSET_DECIMALS)).toFixed(2)} cUSD</span>
         </div>
+        {account && wallet < 1_000000000000000000n && (
+          <button onClick={onGetFunds} disabled={!!busy} style={{ width: "100%", marginBottom: 6 }}>
+            {busy === "Getting test cUSD…" ? busy : "Get 100 test cUSD"}
+          </button>
+        )}
         <div className="row">
           <span className="muted">Total in Kazi</span>
           <span className="v">
