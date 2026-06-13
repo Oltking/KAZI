@@ -8,9 +8,15 @@ import {
   type Address,
   type EIP1193Provider,
 } from "viem";
-import { celo, celoAlfajores } from "viem/chains";
+import { celo, celoSepolia, celoAlfajores } from "viem/chains";
 
-export const CHAIN = process.env.NEXT_PUBLIC_CHAIN === "celo" ? celo : celoAlfajores;
+const CHAIN_NAME = process.env.NEXT_PUBLIC_CHAIN ?? "sepolia";
+export const CHAIN =
+  CHAIN_NAME === "celo" || CHAIN_NAME === "mainnet"
+    ? celo
+    : CHAIN_NAME === "alfajores"
+      ? celoAlfajores
+      : celoSepolia;
 export const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL ?? "http://localhost:8787";
 
 export const publicClient = createPublicClient({ chain: CHAIN, transport: http() });

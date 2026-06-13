@@ -1,4 +1,4 @@
-# Demo script (~2–3 minutes, Alfajores, real txs visible)
+# Demo script (~2–3 minutes, Celo Sepolia, real txs visible)
 
 Following Build Spec §14. Have ready: the web app open in MiniPay (or a desktop
 injected wallet) via an ngrok tunnel, the agent running (`/activity` feed

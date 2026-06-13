@@ -6,10 +6,10 @@ Highest Rank on 8004scan.
 
 ## Pre-submission
 
-- [ ] Deploy contracts to Alfajores (`forge script script/Deploy.s.sol --broadcast`)
+- [ ] Deploy contracts to Celo Sepolia (`forge script script/Deploy.s.sol --broadcast`)
       and confirm `shared/addresses.json` is updated.
 - [ ] Fund the deployer, the agent wallet, and a demo user with test cUSD from
-      the Celo faucet.
+      the Celo Sepolia faucet.
 - [ ] Run the agent; confirm it allocates, harvests, distributes, and registers
       its ERC-8004 identity (appears on **8004scan**).
 - [ ] Verify the agent has a Self Agent ID.

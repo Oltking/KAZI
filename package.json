@@ -12,6 +12,7 @@
     "contracts:build": "cd contracts && forge build",
     "contracts:test": "cd contracts && forge test -vv",
     "agent:dev": "pnpm --filter @kazi/agent dev",
-    "web:dev": "pnpm --filter @kazi/web dev"
+    "web:dev": "pnpm --filter @kazi/web dev",
+    "e2e": "bash scripts/e2e-local.sh"
   }
 }

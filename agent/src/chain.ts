@@ -7,10 +7,25 @@ import {
   type Abi,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { celo, celoAlfajores } from "viem/chains";
+import { celo, celoSepolia, celoAlfajores, type Chain } from "viem/chains";
 import { config } from "./config.ts";
 
-const chain = config.chain === "celo" ? celo : celoAlfajores;
+function resolveChain(name: string): Chain {
+  switch (name) {
+    case "celo":
+    case "mainnet":
+      return celo;
+    case "alfajores":
+      return celoAlfajores;
+    case "sepolia":
+    case "celo-sepolia":
+    case "local": // local anvil runs with chain-id 11142220 to match celoSepolia
+    default:
+      return celoSepolia;
+  }
+}
+
+const chain = resolveChain(config.chain);
 
 export const publicClient = createPublicClient({
   chain,

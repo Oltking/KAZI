@@ -7,7 +7,17 @@ import { startServer } from "./server.ts";
 import { startInstitutionAgent } from "./institution.ts";
 import { record } from "./activity.ts";
 
+const ONCE = process.argv.includes("--once");
+
 async function main(): Promise<void> {
+  // one-shot mode: run a single tick and exit (used by the local e2e and for
+  // cron-style external schedulers). No servers, no in-process cron.
+  if (ONCE) {
+    await ensureErc8004Identity({ account, publicClient, walletClient });
+    await tick();
+    return;
+  }
+
   startServer();
   startInstitutionAgent();
 
@@ -27,4 +37,12 @@ async function main(): Promise<void> {
   record("info", `scheduler armed: tick every ${minutes} min`);
 }
 
-void main();
+main().then(
+  () => {
+    if (ONCE) process.exit(0);
+  },
+  (err) => {
+    console.error("[boot] fatal:", err);
+    process.exit(1);
+  },
+);

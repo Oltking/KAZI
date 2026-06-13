@@ -58,7 +58,7 @@ plain-language guarantee.
 
 | Integration | State |
 | --- | --- |
-| Celo / MiniPay | Alfajores via viem, legacy txs; MiniPay implicit-connection + no-signing honored in web |
+| Celo / MiniPay | Celo Sepolia via viem, legacy txs; MiniPay implicit-connection + no-signing honored in web |
 | MockStrategy | Working, deterministic — the guaranteed demo path |
 | Real senior venue (Aave/Morpho/Mento) | TODO: verify a Celo deployment address, then swap behind `IYieldStrategy` |
 | ERC-8004 | Agent registration wired (registry address via env — verify); reputation reads simple, off-chain aggregation pushes scores |

@@ -45,3 +45,8 @@ Thumbs.db
 
 # --- Claude local settings ---
 .claude/settings.local.json
+
+# --- Installed agent skills (local tooling, not project source) ---
+**/skills/celo-builders/
+skills-lock.json
+/skills/

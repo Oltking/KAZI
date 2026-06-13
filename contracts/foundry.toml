@@ -28,9 +28,12 @@ tab_width = 4
 bracket_spacing = false
 int_types = "long"
 
-# Celo Alfajores. RPC + verification via env. (verify endpoints in docs.celo.org)
+# Celo RPC + verification via env. (verify endpoints in docs.celo.org)
 [rpc_endpoints]
+celo_sepolia = "${CELO_RPC_URL}"
 alfajores = "${CELO_RPC_URL}"
+local = "http://127.0.0.1:8545"
 
 [etherscan]
+celo_sepolia = { key = "${CELOSCAN_API_KEY}", url = "https://api-sepolia.celoscan.io/api", chain = 11142220 }
 alfajores = { key = "${CELOSCAN_API_KEY}", url = "https://api-alfajores.celoscan.io/api", chain = 44787 }

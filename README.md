@@ -45,7 +45,7 @@ shared/      ABIs, addresses, types.
 docs/        Build spec, risk disclosures, demo script.
 ```
 
-## Quickstart (Alfajores testnet)
+## Quickstart (Celo Sepolia testnet)
 
 ```bash
 cp .env.example .env            # fill in keys; never commit .env
@@ -56,7 +56,15 @@ cd ../agent && pnpm i && pnpm dev               # agent boots, registers ERC-800
 cd ../web && pnpm i && pnpm dev                  # then tunnel via ngrok + open in MiniPay on a real Android device
 ```
 
-Get test cUSD from the Celo faucet for the deployer, the agent wallet, and a demo user.
+Get test cUSD from the Celo Sepolia faucet for the deployer, the agent wallet, and a demo user.
+
+### See it work end-to-end, locally, with zero secrets
+
+```bash
+pnpm e2e   # spins up Anvil as Celo Sepolia, deploys, and drives the REAL agent:
+           # deposit → allocate → harvest → fund buffer → lend → default → withdraw,
+           # asserting depositor principal is never touched. Real chain, real txs.
+```
 
 ## Build order
 
