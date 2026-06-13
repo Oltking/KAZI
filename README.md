@@ -76,7 +76,14 @@ Follow `KAZI_BUILD_SPEC.md §11`. Phases 1–2 (capital-protected vault + honest
 - [`docs/RISK.md`](docs/RISK.md) — the principal guarantee + plain-language risk disclosures
 - [`docs/DEMO.md`](docs/DEMO.md) — the ~3-minute demo script
 - [`docs/SUBMISSION.md`](docs/SUBMISSION.md) — hackathon checklist
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — live Celo Sepolia addresses + agentId
 - [`contracts/README.md`](contracts/README.md) — the invariant suite and what it proves
+
+## Live on Celo Sepolia
+
+Deployed and transacting on Celo Sepolia (chain `11142220`). The agent registered
+**ERC-8004 `agentId 351`** and a real deposit → allocate → harvest cycle grows the
+saver's balance on-chain. Addresses + reproduce steps: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Status
 
