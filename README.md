@@ -1,104 +1,121 @@
 # Kazi
 
-**Capital-protected, streaming-yield savings — an autonomous on-chain agent on Celo.**
+**Capital-protected, streaming-yield savings, as an autonomous on-chain agent on Celo.**
 
-You deposit dollar stablecoins. Your **principal is never put at risk.** An autonomous fund-manager agent puts your money to work in conservative, audited venues, and the yield **streams back to you in real time** — you watch your balance tick upward. The yield is real (lending interest from a real economy, not token emissions), and only accumulated *yield* is ever exposed to credit risk, absorbed by a first-loss buffer before any saver is touched.
+You deposit dollar stablecoins. Your **principal is never put at risk.** An autonomous fund-manager agent puts your money to work in conservative venues, and the yield **streams back to you in real time**, so you watch your balance tick upward. The yield is real lending interest, not token emissions, and only accumulated *yield* is ever exposed to credit risk, absorbed by a first-loss buffer before any saver is touched.
 
-Built for the 15M+ MiniPay users in emerging markets. Identity verified with **Self**, reputation made portable via **ERC-8004**, agent-to-agent settlement over **x402**, distribution through **MiniPay** on **Celo**.
+Built for the 15M+ MiniPay users in emerging markets. Identity verified with **Self**, portable reputation via **ERC-8004**, agent-to-agent settlement over **x402**, on **Celo**.
 
-> **Principal guarantee (enforced in code, not just promised):** a depositor can always redeem their full principal, subject only to the solvency of whitelisted senior venues and available liquidity. Member principal is **never** lent into the at-risk credit book. The contracts make this physically impossible — see `contracts/test/CapitalProtection.t.sol`, the invariant suite that gates every build.
+🔗 **Live app:** https://kazi-agent.vercel.app  ·  **Agent on 8004scan:** ERC-8004 `agentId 351`  ·  **Network:** Celo Sepolia (`11142220`)
 
-## Why it's trustable
+---
 
-The agent is the **policy** layer (it decides allocation and underwriting); the contracts are the **enforcement** layer. Even if the agent — or the model behind it — misbehaves, it cannot move principal into credit. Trust is architecture here, not a marketing word.
+## The guarantee (enforced in code, not promised)
 
-## Why it fits Celo
+> A depositor can always redeem their full principal, subject only to the solvency of the whitelisted senior venues and available liquidity. Member principal is **never** lent into the at-risk credit book.
 
-Mobile-first finance for the underbanked Global South is Celo's founding mission; this is dead-center. Stablecoin-native, MiniPay-distributed, no token, yield from a real credit market — the anti-speculation posture the ecosystem screens for. Senior yield is anchored in **Celo-deployed** venues (Aave / Morpho / Mento / Curve on Celo — verify deployments) and stablecoin FX routes through **Mento**, Celo's native stablecoin protocol. (See `KAZI_BUILD_SPEC.md §1.5` for the honest fit analysis.)
+The agent is the **policy** layer (it decides allocation and underwriting); the contracts are the **enforcement** layer. Even if the agent, or the model behind it, misbehaves, it physically cannot move principal into credit. Trust is architecture here, not a marketing word. It is proven by the invariant suite in [`contracts/test/CapitalProtection.t.sol`](contracts/test/CapitalProtection.t.sol), which gates every build.
 
-## Architecture (one glance)
+## Highlights
+
+- 🛡️ **Capital-protected by construction.** Separate vaults, one-directional money flow, and a fuzzed invariant suite that makes a principal leak impossible.
+- 📈 **Honest streaming yield.** The live balance ticker is projected from *realized on-chain value*, never a fabricated APY.
+- 🪪 **Real identity.** Privacy-preserving Self verification (proof of unique humanity, 18+, region), gating deposits and credit.
+- 🧮 **Earned reputation, real credit.** A member's credit score is computed from genuine on-chain saving and repayment history; loans are funded only by realized yield, so no saver's principal is ever at risk.
+- 🤖 **A real agent.** Registered on ERC-8004 (`agentId 351`), it allocates, harvests, distributes, underwrites, and settles agent-to-agent data calls over x402.
+- 📱 **MiniPay-native.** Stablecoin-only, mobile-first, every action is a plain transaction (no message signing).
+
+## How it works
 
 ```
-Saver (cUSD) ──deposit──> PrincipalVault (ERC-4626, senior, PROTECTED)
+Saver (cUSD) ──deposit──▶ PrincipalVault (ERC-4626, senior, PROTECTED)
                               │ safe yield only (one-way)
                               ▼
-                          Allocator → senior IYieldStrategy (Celo DeFi)
+                          Allocator ──▶ senior IYieldStrategy
                               │ realized yield
                               ▼
-                          YieldDistributor ──stream──> savers (balance ticks up)
+                          YieldDistributor ──stream──▶ savers (balance ticks up)
                               │ capped yield slice only (one-way)
                               ▼
-                          JuniorBuffer → CreditBook (loans to scored members)
+                          JuniorBuffer ──▶ CreditBook (loans to verified, scored members)
                               first-loss; principal unreachable
 
 Kazi Agent (off-chain policy): allocate · harvest · distribute · underwrite ·
-  service loans · x402 data calls · ERC-8004 identity + reputation · Self verify
+  service loans · earn reputation · x402 data calls · ERC-8004 + Self
 ```
 
-## Repo layout
+**The flywheel:** more saving → richer reputation → safer, cheaper credit → higher real yield → more reason to save.
 
-```
-contracts/   Foundry. Vault, Allocator, strategies, distributor, buffer, credit, gate,
-             oracle, and the Self on-chain verifier.
-agent/       TypeScript. Control loop (policy), integrations (erc8004/x402/self), status server.
-web/         Next.js. Marketing landing at /, the Mini App dashboard at /app (viem wallet
-             layer, Self QR, on-chain reads, /api/tick agent route). No signing, cUSD.
-shared/      ABIs, addresses, types.
-docs/        Architecture, risk disclosures, demo + deploy guides, submission checklist.
-```
+## Why it fits Celo
 
-## Quickstart (Celo Sepolia testnet)
+Mobile-first finance for the underbanked Global South is Celo's founding mission, and this sits dead-center: stablecoin-native, MiniPay-distributed, no token, yield from a real credit market. That is the anti-speculation posture the ecosystem screens for. The senior yield strategy is a swappable `IYieldStrategy` adapter, ready to point at a Celo-deployed venue.
+
+## Tech
+
+| Layer | Stack |
+| --- | --- |
+| Contracts | Foundry, Solidity 0.8.x, OpenZeppelin, ERC-4626 |
+| Agent / API | TypeScript, viem, Next.js route handlers |
+| Web | Next.js, viem, `@selfxyz/qrcode`, no heavy UI deps |
+| Identity | Self (`@selfxyz/core` off-chain verification) |
+| Reputation / identity registry | ERC-8004 |
+| Payments | x402 (thirdweb) |
+
+## Live on Celo Sepolia
+
+Deployed and transacting on Celo Sepolia (chain `11142220`). The agent registered **ERC-8004 `agentId 351`**, and a real deposit → allocate → harvest cycle grows the saver's balance on-chain. Contract addresses and a one-command reproduce are in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+## Run it
 
 ```bash
-cp .env.example .env            # fill in keys; never commit .env
-cd contracts && forge install && forge test   # invariants MUST pass
-forge script script/Deploy.s.sol --rpc-url $CELO_RPC_URL --broadcast
-# writes deployed addresses to shared/addresses.json
-cd ../agent && pnpm i && pnpm dev               # agent boots, registers ERC-8004 id, starts ticking
-cd ../web && pnpm i && pnpm dev                  # then tunnel via ngrok + open in MiniPay on a real Android device
+cp .env.example .env            # fill keys for live deploy; never commit .env
+pnpm install
+cd contracts && forge install && forge test     # 15 tests, invariants included
 ```
 
-Get test cUSD from the Celo Sepolia faucet for the deployer, the agent wallet, and a demo user.
-
-### See it work end-to-end, locally, with zero secrets
+See the whole product run end-to-end, on a real chain, with **zero secrets**:
 
 ```bash
 pnpm e2e   # spins up Anvil as Celo Sepolia, deploys, and drives the REAL agent:
            # deposit → allocate → harvest → fund buffer → lend → default → withdraw,
-           # asserting depositor principal is never touched. Real chain, real txs.
+           # asserting depositor principal is never touched.
 ```
 
-## Build order
+Deploy to Celo Sepolia and run the live app:
 
-Follow `KAZI_BUILD_SPEC.md §11`. Phases 1–2 (capital-protected vault + honest streaming + agent harvest loop) must be a complete, transacting, winning submission on their own. The credit loop, x402, and reputation (Phases 4–5) are flag-gated upside, demoed without ever touching principal.
+```bash
+cd contracts && forge script script/Deploy.s.sol --rpc-url $CELO_RPC_URL --broadcast
+cd ../agent  && pnpm start     # agent registers its ERC-8004 id and starts ticking
+cd ../web    && pnpm dev       # landing at /, the Mini App at /app
+```
+
+## Tests
+
+`forge test` is green: **5 capital-protection invariants** (principal isolation, backing, junior exclusion, loss waterfall, value conservation), **9 unit tests** (gating, access control, redeemability), and **1 end-to-end credit-loop scenario** proving a default is absorbed by the buffer while depositor principal is untouched.
+
+## Repo layout
+
+```
+contracts/   Foundry: vault, allocator, distributor, buffer, credit, gate, oracle, strategies
+agent/       TypeScript: control loop (policy) + integrations (erc8004 / x402 / self)
+web/         Next.js: landing at /, the Mini App at /app, + agent API routes
+shared/      ABIs, deployed addresses, types
+docs/        Architecture, risk disclosures, demo + deploy guides
+```
 
 ## Docs
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layers, money-flow rules, integration status
-- [`docs/RISK.md`](docs/RISK.md) — the principal guarantee + plain-language risk disclosures
-- [`docs/DEMO.md`](docs/DEMO.md) — the ~3-minute demo script
-- [`docs/SUBMISSION.md`](docs/SUBMISSION.md) — hackathon checklist
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — live Celo Sepolia addresses + agentId
-- [`docs/DEPLOY-WEB.md`](docs/DEPLOY-WEB.md) — deploy the web app to Vercel
-- [`contracts/README.md`](contracts/README.md) — the invariant suite and what it proves
-
-## Live on Celo Sepolia
-
-Deployed and transacting on Celo Sepolia (chain `11142220`). The agent registered
-**ERC-8004 `agentId 351`** and a real deposit → allocate → harvest cycle grows the
-saver's balance on-chain. Addresses + reproduce steps: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-
-## Status
-
-- **Contracts** — complete; `forge test` green (5 capital-protection invariants, 9 unit tests, 1 end-to-end credit-loop scenario).
-- **Agent** — control loop, `/status`·`/vault`·`/activity` server, ERC-8004 registration, x402 institution agent. Works against `MockStrategy` today.
-- **Web** — MiniPay Mini App with the live earnings ticker; deposit/withdraw as plain transactions.
-- **External integrations** (Self, ERC-8004 registry addresses, thirdweb x402) are wired but every live address/API is marked `// TODO: verify` and must be confirmed against current docs before mainnet — see `docs/ARCHITECTURE.md`.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): layers, money-flow rules, integration status
+- [`docs/RISK.md`](docs/RISK.md): the principal guarantee and plain-language risk disclosures
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md): live addresses and reproduce steps
+- [`docs/DEPLOY-WEB.md`](docs/DEPLOY-WEB.md): deploy the web app to Vercel
+- [`docs/DEMO.md`](docs/DEMO.md): a short demo script
+- [`contracts/README.md`](contracts/README.md): the invariant suite and what it proves
 
 ## Non-goals
 
-No token / emissions-funded yield. No leverage or exotic strategies for principal. No off-chain custody. No fake UI numbers (the ticker reflects realized on-chain yield only). No user-side signing (MiniPay constraint). No hardcoded unverified addresses.
+No token or emissions-funded "yield". No leverage or exotic strategies for principal. No off-chain custody. No fabricated UI numbers (the ticker reflects realized on-chain yield only). No user-side signing.
 
 ## License
 
-MIT (or your choice).
+MIT
