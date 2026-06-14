@@ -1,22 +1,22 @@
 :root {
-  --bg: #081710;
-  --bg-elev: #0d2118;
-  --bg-card: #11271d;
-  --bg-card-2: #143024;
-  --line: #1d3b2c;
-  --line-soft: #173021;
-  --text: #eaf4ee;
-  --muted: #8fb3a1;
-  --accent: #35d07f; /* Celo green */
-  --accent-2: #2bb86d;
-  --accent-soft: rgba(53, 208, 127, 0.12);
-  --accent-glow: rgba(53, 208, 127, 0.28);
-  --danger: #f0a94b;
-  --danger-soft: rgba(240, 169, 75, 0.12);
+  --bg: #e8ecea; /* light grey */
+  --bg-elev: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-2: #f4f7f5;
+  --line: #dde3df;
+  --line-soft: #e7ece9;
+  --text: #0c1712;
+  --muted: #5c6c63;
+  --accent: #0a9d57; /* Celo green, readable on light */
+  --accent-2: #0c8a4d;
+  --accent-soft: rgba(10, 157, 87, 0.1);
+  --accent-glow: rgba(10, 157, 87, 0.22);
+  --danger: #b45309;
+  --danger-soft: rgba(180, 83, 9, 0.1);
   --radius: 18px;
   --radius-sm: 12px;
   --maxw: 520px;
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  --shadow: 0 8px 26px rgba(12, 20, 16, 0.08);
 }
 
 * {
@@ -28,7 +28,7 @@ body {
   margin: 0;
   padding: 0;
   background:
-    radial-gradient(900px 500px at 50% -8%, rgba(53, 208, 127, 0.1), transparent 60%),
+    radial-gradient(900px 500px at 50% -8%, rgba(10, 157, 87, 0.06), transparent 60%),
     var(--bg);
   background-attachment: fixed;
   color: var(--text);
@@ -47,7 +47,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(8, 23, 16, 0.78);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: saturate(140%) blur(12px);
   border-bottom: 1px solid var(--line-soft);
 }
@@ -94,7 +94,7 @@ a {
   font-size: 14px;
   border: 1px solid var(--accent);
   background: var(--accent);
-  color: #05130c;
+  color: #ffffff;
   border-radius: 999px;
   padding: 9px 16px;
   cursor: pointer;
@@ -324,9 +324,9 @@ a {
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn.primary {
   background: var(--accent);
-  color: #05130c;
+  color: #ffffff;
   border-color: var(--accent);
-  box-shadow: 0 6px 18px rgba(53, 208, 127, 0.18);
+  box-shadow: 0 6px 18px rgba(10, 157, 87, 0.22);
 }
 .btn.ghost { background: transparent; }
 .btn.block { width: 100%; margin-top: 4px; }
@@ -459,7 +459,7 @@ a {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(3, 10, 7, 0.62);
+  background: rgba(12, 23, 18, 0.45);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: flex-end;
@@ -577,7 +577,7 @@ a {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  background: linear-gradient(90deg, transparent, rgba(12, 20, 16, 0.05), transparent);
   animation: shimmer 1.3s infinite;
 }
 .skelBalance { height: 46px; width: 60%; border-radius: 10px; margin: 10px 0 8px; }
