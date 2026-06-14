@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { SelfQRcodeWrapper, SelfAppBuilder, countries } from "@selfxyz/qrcode";
-import { addresses } from "@kazi/shared";
 
-// "celo" = production (Celo mainnet, the Self app most people have);
-// "staging_celo" = Self staging (needs the staging/dev Self app).
-const ENDPOINT_TYPE = (process.env.NEXT_PUBLIC_SELF_ENDPOINT_TYPE ?? "staging_celo") as
-  | "celo"
-  | "staging_celo";
+// Off-chain verification: the Self app posts the proof to our backend, which
+// verifies it and records the attestation on-chain. This works with the normal
+// production Self app and keeps everything on Celo Sepolia (no funds). The
+// endpoint URL here MUST match SELF_ENDPOINT on the server (the scope is derived
+// from it).
+const SELF_ENDPOINT =
+  process.env.NEXT_PUBLIC_SELF_ENDPOINT ?? "https://kazi-agent.vercel.app/api/self-verify";
 
 /**
  * Real Self verification QR. The member scans with the Self mobile app and
@@ -28,13 +29,12 @@ export default function SelfVerifyInner({
   const [error, setError] = useState<string | null>(null);
 
   const app = useMemo(() => {
-    if (!addresses.selfVerifier) return null;
     return new SelfAppBuilder({
       version: 2,
       appName: "Kazi",
       scope: process.env.NEXT_PUBLIC_SELF_SCOPE_SEED ?? "kazi",
-      endpoint: addresses.selfVerifier, // on-chain SelfVerifier contract
-      endpointType: ENDPOINT_TYPE,
+      endpoint: SELF_ENDPOINT, // our backend verifier (off-chain flow)
+      endpointType: "https",
       userId: user, // verified identity is bound to the saver's wallet address
       userIdType: "hex",
       disclosures: {
@@ -45,7 +45,7 @@ export default function SelfVerifyInner({
   }, [user]);
 
   if (!app) {
-    return <p className="muted">Verifier not deployed yet.</p>;
+    return <p className="muted">Verification unavailable.</p>;
   }
 
   return (
@@ -65,10 +65,8 @@ export default function SelfVerifyInner({
       />
       <p className="muted" style={{ textAlign: "center" }}>
         Scan with the <a href="https://self.xyz" target="_blank" rel="noreferrer">Self</a> app
-        to verify (privacy-preserving, 18+).{" "}
-        {ENDPOINT_TYPE === "staging_celo"
-          ? "Testnet uses Self's staging app."
-          : "Use the Self app from your app store."}
+        to verify (privacy-preserving, 18+). Your status updates automatically once the proof is
+        accepted.
       </p>
       {error && <p className="inlineError" style={{ textAlign: "center" }}>{error}</p>}
     </div>
