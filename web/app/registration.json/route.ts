@@ -22,6 +22,10 @@ export async function GET() {
       "Capital-protected, streaming-yield savings and credit agent on Celo. An autonomous fund manager: it allocates member principal only to senior venues, harvests and streams the yield back to savers in real time, and underwrites yield-funded credit to Self-verified, reputation-scored members. Member principal is never put at risk, enforced by the contracts.",
     image: `${base}/kazi.webp`,
     active: true,
+    agentType: "defi",
+    tags: ["savings", "yield", "credit", "stablecoin", "minipay", "celo", "defi"],
+    categories: ["DeFi", "Savings", "Payments"],
+    updatedAt: new Date().toISOString(),
     services: [
       {
         name: "MCP",
