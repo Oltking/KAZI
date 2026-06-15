@@ -1,0 +1,26 @@
+{
+  "name": "Kazi",
+  "description": "Capital-protected, streaming-yield savings and credit agent on Celo. MCP tools expose live on-chain vault status, agent posture, and a wallet's earned credit score.",
+  "version": "2025-06-18",
+  "protocolVersion": "2025-06-18",
+  "transport": "streamable-http",
+  "endpoint": "https://kazi-agent.vercel.app/api/mcp",
+  "url": "https://kazi-agent.vercel.app/api/mcp",
+  "capabilities": { "tools": { "listChanged": false } },
+  "tools": [
+    {
+      "name": "get_vault_status",
+      "description": "Live status of the Kazi savings vault: TVL, shares outstanding, principal deployed, yield accruing, and lifetime yield streamed. Read on-chain."
+    },
+    {
+      "name": "get_agent_status",
+      "description": "Identity and posture of the Kazi agent: ERC-8004 id, wallet, network, x402 support, and the capital-protection guarantee."
+    },
+    {
+      "name": "get_credit_score",
+      "description": "On-chain credit profile of a wallet: earned reputation score, minimum to borrow, yield-funded capacity, and eligibility."
+    }
+  ],
+  "prompts": [],
+  "resources": []
+}
